@@ -1,5 +1,6 @@
 "use client";
 
+import PromptNode from '@/components/nodes/prompt';
 import StartNode from '@/components/nodes/start';
 import useStore from '@/lib/store';
 import { Background, BackgroundVariant, ReactFlow } from '@xyflow/react';
@@ -9,6 +10,7 @@ import { useShallow } from 'zustand/shallow';
 
 const nodeTypes = {
   start: StartNode,
+  prompt: PromptNode,
 };
 
 export default function Home() {
@@ -32,6 +34,7 @@ export default function Home() {
         onConnect={onConnect}
         nodeTypes={nodeTypes}
         fitView
+        maxZoom={1}
         >
         <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
       </ReactFlow>

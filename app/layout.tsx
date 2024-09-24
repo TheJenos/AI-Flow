@@ -3,7 +3,6 @@
 import localFont from "next/font/local";
 import "./globals.css";
 import dynamic from "next/dynamic";
-import { ReactFlowProvider } from "@xyflow/react";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -36,10 +35,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        <ReactFlowProvider>
-          <Topbar />
-          {children}
-        </ReactFlowProvider>
+        <Topbar />
+        {children}
       </body>
     </html>
   );
