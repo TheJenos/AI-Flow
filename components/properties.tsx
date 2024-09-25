@@ -4,9 +4,9 @@ import { useMemo } from "react";
 
 export default function Properties() {
     const selectedNode = useFlowStore((state) => state.selectedNode);
-    
+
     const nodeDetails = useMemo(() => {
-        return getNodeDetails(selectedNode?.type);
+        return selectedNode ? getNodeDetails(selectedNode.type as string) : null;
     }, [selectedNode]);
 
     const PropertiesComponent = nodeDetails?.properties;

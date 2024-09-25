@@ -8,10 +8,34 @@ import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
+import { set, cloneDeep } from 'lodash'
+import ConfirmAlert from '../confirm_alert';
+import { NodeMetaData } from '@/lib/nodes';
+
+type Property = { name: string; type: string };
+
+export const Metadata: NodeMetaData = {
+    type: 'start',
+    name: 'Start',
+    description: 'The first node in the flow. Please add a your initial values here.',
+    notAddable: true
+}
+
+export const Process = async (context: {[key: string]: string | number | object }, node: AppNode) => {
+    console.log("start node",'context', context, 'node', node);
+    context['run'] =0;
+    return context
+}
 
 export const Properties = ({ node }: { node: AppNode }) => {
-    const existingProperties = (node.data.properties || []) as { name: string; type: string }[];
-    const [properties, setProperties] = useState<{ name: string; type: string }[]>(existingProperties);
+    const existingProperties = (node.data.properties || []) as Property[];
+    const existingPropertyValues = (node.data.propertyValues || {}) as { [key: string]: string | number | undefined };
+
+    const [deleteProperty, setDeleteProperty] = useState<Property>();
+    const [properties, setProperties] = useState<Property[]>(existingProperties);
+    const [propertyValues, setPropertyValues] = useState<{ [key: string]: string | number | undefined }>(existingPropertyValues);
+    const [selectedType, setSelectedType] = useState<string>();
+
     const updateNode = useFlowStore(state => state.updateNode);
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -22,45 +46,51 @@ export const Properties = ({ node }: { node: AppNode }) => {
             type: formData.get('type') as string
         };
         setProperties([...properties, newProperty]);
-        updateNode({
-            ...node,
-            data: {
-                ...node.data,
-                properties: [...properties, newProperty]
-            }
-        });
+        const clonedNode = cloneDeep(node);
+        set(clonedNode, 'data.properties', [...properties, newProperty]);
+        updateNode(clonedNode);
+        setSelectedType(undefined);
         (e.target as HTMLFormElement).reset();
     };
 
-    const handleDelete = (index: number) => {
-        const updatedProperties = properties.filter((_, i) => i !== index);
+    const handleDelete = (prop: Property, force: boolean = false) => {
+        if (!force && propertyValues[prop.name]) {
+            setDeleteProperty(prop);
+            return;
+        }
+
+        const updatedProperties = properties.filter((p) => p.name !== prop.name);
+        setDeleteProperty(undefined);
         setProperties(updatedProperties);
-        updateNode({
-            ...node,
-            data: {
-                ...node.data,
-                properties: updatedProperties
-            }
+        setPropertyValues({
+            ...propertyValues,
+            [prop.name]: undefined
         });
+        const clonedNode = cloneDeep(node);
+        set(clonedNode, 'data.properties', updatedProperties);
+        set(clonedNode, `data.propertyValues.${prop.name}`, undefined);
+        updateNode(clonedNode);
     };
 
     const renderInput = (prop: { name: string; type: string }) => {
+        const value = propertyValues[prop.name] || '';
+        const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+            setPropertyValues({
+                ...propertyValues,
+                [prop.name]:  e.target.value
+            });
+            const clonedNode = cloneDeep(node);
+            set(clonedNode, `data.propertyValues.${prop.name}`,  e.target.value);
+            updateNode(clonedNode);
+        };
+        
         switch (prop.type) {
             case 'textarea':
-                return <Textarea id={prop.name} className='h-20 w-full p-2' placeholder={prop.name} />;
-            case 'radio':
-                return (
-                    <div className='flex gap-2'>
-                        <input type='radio' id={`${prop.name}-yes`} name={prop.name} value='yes' />
-                        <label htmlFor={`${prop.name}-yes`}>Yes</label>
-                        <input type='radio' id={`${prop.name}-no`} name={prop.name} value='no' />
-                        <label htmlFor={`${prop.name}-no`}>No</label>
-                    </div>
-                );
+                return <Textarea id={prop.name} className='' placeholder={prop.name} value={value} onChange={handleChange} />;
             case 'checkbox':
-                return <input id={prop.name} type='checkbox' />;
+                return <input id={prop.name} type='checkbox' checked={value === 'yes'} onChange={handleChange} />;
             default:
-                return <Input id={prop.name} className='h-8' type={prop.type} placeholder={prop.name} />;
+                return <Input id={prop.name} className='h-8' type={prop.type} placeholder={prop.name} value={value} onChange={handleChange} />;
         }
     };
 
@@ -74,7 +104,7 @@ export const Properties = ({ node }: { node: AppNode }) => {
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDelete(index)}
+                            onClick={() => handleDelete(prop)}
                             className="text-red-500 hover:text-red-700 p-0.5 h-6 w-6 ml-auto"
                         >
                             <Trash className='w-4 h-4' />
@@ -84,7 +114,7 @@ export const Properties = ({ node }: { node: AppNode }) => {
                 </div>
             ))}
             <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-                <span className='text-xs font-semibold'>Add Property</span>
+                <span className='text-xs font-semibold'>Add Inputs</span>
                 <div className='flex gap-2'>
                     <Input
                         type="text"
@@ -92,10 +122,13 @@ export const Properties = ({ node }: { node: AppNode }) => {
                         name="name"
                         required
                         className='h-8'
+                        autoComplete='off'
                     />
                     <Select
                         name='type'
                         required
+                        value={selectedType}
+                        onValueChange={(e) => setSelectedType(e)}
                     >
                         <SelectTrigger className='h-8'>
                             <SelectValue className='w-full h-8' placeholder="Type" />
@@ -105,7 +138,6 @@ export const Properties = ({ node }: { node: AppNode }) => {
                             <SelectItem value="number">Number</SelectItem>
                             <SelectItem value="checkbox">Checkbox</SelectItem>
                             <SelectItem value="textarea">Textarea</SelectItem>
-                            <SelectItem value="radio">Radio</SelectItem>
                         </SelectContent>
                     </Select>
                     <Button className='w-24 h-8' size={'icon'} type="submit">
@@ -113,11 +145,18 @@ export const Properties = ({ node }: { node: AppNode }) => {
                     </Button>
                 </div>
             </form>
+            <ConfirmAlert
+                open={!!deleteProperty}
+                title="Delete property"
+                description="Are you sure you want to delete this property?"
+                onConfirm={() => handleDelete(deleteProperty as Property, true)}
+                onCancel={() => setDeleteProperty(undefined)}
+            />
         </div>
     );
 };
 
-export default function StartNode({ isConnectable }: NodeProps) {
+export function Node({ isConnectable }: NodeProps) {
     return (
         <Card className="bg-green-600 bg-opacity-70 px-3 py-2 flex gap-2 items-center rounded-3xl text-white">
             <PlayCircle /> <span className='text-sm font-semibold'>Start</span>

@@ -66,3 +66,73 @@
     @apply bg-background text-foreground;
   }
 }
+
+.RichEditor-root h1 {
+  @apply text-4xl font-bold mb-4;
+}
+
+.RichEditor-root h2 {
+  @apply text-3xl font-semibold mb-3;
+}
+
+.RichEditor-root h3 {
+  @apply text-2xl font-semibold mb-2;
+}
+
+.RichEditor-root h4 {
+  @apply text-xl font-medium mb-2;
+}
+
+.RichEditor-root h5 {
+  @apply text-lg font-medium mb-1;
+}
+
+.RichEditor-root h6 {
+  @apply text-base font-medium mb-1;
+}
+
+.RichEditor-root p {
+  @apply text-base mb-4;
+}
+
+
+.RichEditor-root {
+  @apply bg-white border border-gray-300 text-sm;
+}
+
+.RichEditor-editor {
+  @apply border-t border-gray-300 cursor-text text-base h-[60vh] overflow-y-auto px-3;
+}
+
+.RichEditor-editor .public-DraftEditorPlaceholder-root,
+.RichEditor-editor .public-DraftEditor-content {
+  @apply -mx-4 -mb-4 p-4;
+}
+
+.RichEditor-editor .public-DraftEditor-content {
+  @apply min-h-[100px];
+}
+
+.RichEditor-hidePlaceholder .public-DraftEditorPlaceholder-root {
+  @apply hidden;
+}
+
+.RichEditor-editor .RichEditor-blockquote {
+  @apply border-l-4 border-gray-200 text-gray-600 italic my-4 py-2.5 px-5;
+}
+
+.RichEditor-editor .public-DraftStyleDefault-pre {
+  @apply bg-gray-100 font-mono text-base p-5;
+}
+
+.RichEditor-controls {
+  @apply font-sans text-sm mb-1.5 select-none;
+}
+
+.RichEditor-styleButton {
+  @apply text-gray-500 cursor-pointer mr-4 py-0.5 px-0 inline-block;
+}
+
+.RichEditor-activeButton {
+  @apply text-blue-500;
+}
