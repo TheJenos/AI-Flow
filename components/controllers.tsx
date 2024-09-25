@@ -1,7 +1,7 @@
 import NewNode from "./new_node";
 import { Card } from "./ui/card";
 import { Toggle } from "./ui/toggle";
-import { Play, Plus } from "lucide-react";
+import { Play } from "lucide-react";
 
 export default function Controllers() {
   return (

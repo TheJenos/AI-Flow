@@ -2,9 +2,8 @@ import { Plus } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Toggle } from "./ui/toggle";
 import { useEffect, useState } from "react";
-import StartNode from "./nodes/start";
 import useStore from "@/lib/store";
-import PromptNode from "./nodes/prompt";
+import { nodeDetails } from "@/lib/nodes";
 
 export default function NewNode() {
     const [open, setOpen] = useState(false);
@@ -18,18 +17,12 @@ export default function NewNode() {
         }
     }, [open]);
 
-    const nodeTypes = [
-        { name: 'Prompt', description: 'Generate a response based on the given prompt', node: PromptNode, type: 'prompt' },
-        { name: 'Condition', description: 'Branch the flow based on a condition', node: StartNode, type: 'start' },
-        { name: 'Action', description: 'Perform a specific action in the flow', node: StartNode, type: 'start' },
-    ];
-
-    const filteredNodes = nodeTypes.filter(node =>
+    const filteredNodes = nodeDetails.filter(node => !node.notAddable).filter(node =>
         node.name.toLowerCase().includes(search.toLowerCase()) ||
         node.description.toLowerCase().includes(search.toLowerCase())
     );
 
-    const handleNodeClick = (node: any) => {
+    const handleNodeClick = (node: typeof nodeDetails[number]) => {
         setOpen(false);
         setNodes([...nodes, {
             id: `${nodes.length + 1}`,
@@ -54,7 +47,7 @@ export default function NewNode() {
                     onChange={(e) => setSearch(e.target.value)}
                     className="h-8 text-sm px-2 w-full outline-none bg-transparent"
                 />
-                <div className="flex flex-col bg-white rounded-b-md border-t-2 border-accent">
+                <div className="flex flex-col bg-white rounded-b-md border-t-2 border-accent h-36 overflow-y-auto">
                     {filteredNodes.length > 0 ? (
                         filteredNodes.map((node, index) => {
                             const Node = node.node;

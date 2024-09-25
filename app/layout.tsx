@@ -2,7 +2,9 @@
 
 import localFont from "next/font/local";
 import "./globals.css";
-import dynamic from "next/dynamic";
+import { ReactNode } from "react";
+import { ReactFlowProvider } from "@xyflow/react";
+import BaseLayout from "@/components/base_layout";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -15,14 +17,10 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-const Topbar = dynamic(() => import("@/components/topbar"), {
-  ssr: false,
-});
-
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: ReactNode;
 }>) {
   return (
     <html lang="en">
@@ -35,8 +33,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        <Topbar />
-        {children}
+        <ReactFlowProvider>
+          <BaseLayout>
+            {children}
+          </BaseLayout>
+        </ReactFlowProvider>
       </body>
     </html>
   );

@@ -1,20 +1,14 @@
 "use client";
 
-import PromptNode from '@/components/nodes/prompt';
-import StartNode from '@/components/nodes/start';
-import useStore from '@/lib/store';
+import { nodeTypes } from '@/lib/nodes';
+import useFlowStore from '@/lib/store';
 import { Background, BackgroundVariant, ReactFlow } from '@xyflow/react';
 
 import '@xyflow/react/dist/style.css';
 import { useShallow } from 'zustand/shallow';
 
-const nodeTypes = {
-  start: StartNode,
-  prompt: PromptNode,
-};
-
 export default function Home() {
-  const { nodes, edges, onNodesChange, onEdgesChange, onConnect } = useStore(
+  const { nodes, edges, onNodesChange, onEdgesChange, onConnect } = useFlowStore(
     useShallow((state) => ({
       nodes: state.nodes,
       edges: state.edges,
@@ -25,7 +19,7 @@ export default function Home() {
   );
 
   return (
-    <div className='bg-white' style={{ width: '100vw', height: '100vh' }}>
+    <div className='bg-white absolute inset-0 h-full w-full'>
       <ReactFlow
         nodes={nodes}
         edges={edges}
