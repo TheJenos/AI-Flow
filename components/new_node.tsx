@@ -25,10 +25,12 @@ export default function NewNode() {
     const handleNodeClick = (node: typeof nodeDetails[number]) => {
         setOpen(false);
         setNodes([...nodes, {
-            id: `${nodes.length + 1}`,
+            id: `${node.type}_${Math.random().toString(16).slice(2)}`,
             type: node.type,
             position: { x: 0, y: 0 },
-            data: {}
+            data: {
+                thread: Math.random().toString(16).slice(2)
+            }
         }]);
     }
 

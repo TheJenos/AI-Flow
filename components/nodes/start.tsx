@@ -1,4 +1,4 @@
-import { Handle, NodeProps, Position } from '@xyflow/react';
+import { NodeProps } from '@xyflow/react';
 import { PlayCircle, Plus, Trash } from 'lucide-react';
 import { Card } from '../ui/card';
 import { useState } from 'react';
@@ -10,7 +10,10 @@ import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { set, cloneDeep } from 'lodash'
 import ConfirmAlert from '../confirm_alert';
-import { NodeMetaData } from '@/lib/nodes';
+import { NodeMetaData, NodeState } from '@/lib/nodes';
+import { cva } from 'class-variance-authority';
+import { cn } from '@/lib/utils';
+import { ThreadSourceHandle } from '../thread_handle';
 
 type Property = { name: string; type: string };
 
@@ -156,15 +159,31 @@ export const Properties = ({ node }: { node: AppNode }) => {
     );
 };
 
-export function Node({ isConnectable }: NodeProps) {
+const noteStateVariants = cva(
+    "bg-green-600 bg-opacity-70 px-3 py-2 flex gap-2 items-center rounded-3xl text-white",
+    {
+        variants: {
+            state: {
+                idle: 'bg-opacity-80',
+                waiting: 'bg-opacity-20',
+                running: 'bg-opacity-40',
+                completed: 'bg-opacity-80',
+                failed: 'bg-opacity-80',
+            }
+        },
+        defaultVariants: {
+            state: 'idle'
+        }
+    }
+)
+
+export function Node({ isConnectable, data }: NodeProps) {
+    const state = (data.state || 'idle') as NodeState;
+
     return (
-        <Card className="bg-green-600 bg-opacity-70 px-3 py-2 flex gap-2 items-center rounded-3xl text-white">
+        <Card className={cn(noteStateVariants({ state }))}>
             <PlayCircle /> <span className='text-sm font-semibold'>Start</span>
-            {isConnectable ? <Handle
-                type="source"
-                position={Position.Bottom}
-                className='!rounded-md !w-1/5 !h-2 max-w-auto max-h-auto bg-primary'
-            /> : null}
+            <ThreadSourceHandle active={isConnectable} />
         </Card>
     );
 }

@@ -1,5 +1,9 @@
 import * as StartNode from "@/components/nodes/start";
 import * as PromptNode from "@/components/nodes/prompt";
+import * as MultiTreadNode from "@/components/nodes/multi_thread";
+import * as TreadMergeNode from "@/components/nodes/thread_merge";
+
+export type NodeState = 'idle' | 'waiting' | 'running' | 'completed' | 'failed';
 
 export type NodeMetaData = {
     type: string;
@@ -16,7 +20,9 @@ type NodeDetails = NodeMetaData & {
 
 const nodes = [
     StartNode,
-    PromptNode
+    PromptNode,
+    MultiTreadNode,
+    TreadMergeNode
 ];
 
 export const nodeDetails: NodeDetails[] = nodes.map(x => ({
