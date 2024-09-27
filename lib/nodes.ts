@@ -2,11 +2,29 @@ import * as StartNode from "@/components/nodes/start";
 import * as PromptNode from "@/components/nodes/prompt";
 import * as MultiTreadNode from "@/components/nodes/multi_thread";
 import * as TreadMergeNode from "@/components/nodes/thread_merge";
+import * as DecisionNode from "@/components/nodes/decision";
+import { AppNode } from "./store";
+
+export type NodeType = 'start' | 'prompt' | 'multi_thread' | 'thread_merge' | 'decision'
+
+const nodes = [
+    StartNode,
+    PromptNode,
+    MultiTreadNode,
+    TreadMergeNode,
+    DecisionNode
+];
 
 export type NodeState = 'idle' | 'waiting' | 'running' | 'completed' | 'failed';
 
+export type AppContext = {
+    [key: string]: string | number | object
+}
+
+export type NodeProcess = (context: AppContext, node: AppNode, nextNodes: AppNode[]) => Promise<AppNode[]>
+
 export type NodeMetaData = {
-    type: string;
+    type: NodeType;
     name: string;
     description: string;
     notAddable?: boolean;
@@ -15,15 +33,8 @@ export type NodeMetaData = {
 type NodeDetails = NodeMetaData & {
     node: typeof StartNode.Node;
     properties: typeof StartNode.Properties;
-    process: typeof StartNode.Process;
+    process: NodeProcess;
 }
-
-const nodes = [
-    StartNode,
-    PromptNode,
-    MultiTreadNode,
-    TreadMergeNode
-];
 
 export const nodeDetails: NodeDetails[] = nodes.map(x => ({
     ...x.Metadata,
@@ -34,7 +45,7 @@ export const nodeDetails: NodeDetails[] = nodes.map(x => ({
 
 export const nodeTypes = Object.fromEntries(nodeDetails.map(node => [node.type, node.node]));
 
-export const getNodeDetails = (type: string) => {
+export const getNodeDetails = (type: NodeType) => {
     const node = nodeDetails.find(node => node.type === type);
     if (!node) {    
         throw new Error(`Node with type ${type} not found`);

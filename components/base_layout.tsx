@@ -1,4 +1,4 @@
-import useFlowStore from "@/lib/store";
+import { useFlowStore } from "@/lib/store";
 import Topbar from "./topbar";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./ui/resizable";
 import { useEffect, useRef } from "react";

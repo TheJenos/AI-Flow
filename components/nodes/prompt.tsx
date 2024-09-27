@@ -1,8 +1,7 @@
-import { NodeProps } from '@xyflow/react';
 import { ScrollText } from 'lucide-react';
 import { Card } from '../ui/card';
-import { NodeMetaData, NodeState } from '@/lib/nodes';
-import useFlowStore, { AppNode } from '@/lib/store';
+import { AppContext, NodeMetaData, NodeState } from '@/lib/nodes';
+import { useFlowStore, AppNode, AppNodeProp } from '@/lib/store';
 import { cloneDeep, set } from 'lodash';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
@@ -13,18 +12,19 @@ import { cva } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 import NoteIcon from '../node_icon';
 import { ThreadSourceHandle, ThreadTargetHandle } from '../thread_handle';
+import DevMode from '../dev_mode';
 
 export const Metadata: NodeMetaData = {
     type: 'prompt',
-    name: 'Open AI Chat Prompt',
+    name: 'OpenAI Chat Prompt',
     description: 'Generate a response based on the given prompt'
 }
 
-export const Process = async (context: { [key: string]: string | number | object }, node: AppNode) => {
+export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[]) => {
     await new Promise(resolve => setTimeout(resolve, Math.random() * 5000));
     console.log("prompt node", node.data.name, 'context', context, 'node', node);
     context['run'] = (context['run'] as number) + 1;
-    return context
+    return nextNodes
 }
 
 export const Properties = ({ node }: { node: AppNode }) => {
@@ -43,6 +43,7 @@ export const Properties = ({ node }: { node: AppNode }) => {
                 <Input
                     name="name"
                     value={node.data.name as string}
+                    placeholder={Metadata.name}
                     onChange={(e) => setValue('name', e.target.value)}
                 />
             </div>
@@ -74,7 +75,7 @@ export const Properties = ({ node }: { node: AppNode }) => {
 }
 
 const noteStateVariants = cva(
-    "bg-red-600 p-2 flex gap-2 rounded-none items-center text-white transition-all duration-300",
+    "bg-red-600 p-2 flex flex-col gap-2 rounded-none items-center text-white transition-all duration-300",
     {
         variants: {
             state: {
@@ -91,18 +92,21 @@ const noteStateVariants = cva(
     }
 )
 
-export function Node({ isConnectable, data }: NodeProps) {
+export function Node({ isConnectable, data }: AppNodeProp) {
     const name = useMemo(() => {
-        return (data?.name || 'Prompt') as string;
+        return (data?.name || Metadata.name) as string;
     }, [data?.name]);
 
     const state = (data.state || 'idle') as NodeState;
-    const thread = (data.thread || 'not found') as string;
 
     return (
         <Card className={cn(noteStateVariants({ state }))}>
             <ThreadTargetHandle active={isConnectable} />
-            <NoteIcon state={state} idleIcon={ScrollText} /> <span className='text-sm font-semibold'>{name} {thread}</span>
+            <div className='flex gap-2'>
+                <NoteIcon state={state} idleIcon={ScrollText} /> 
+                <span className='text-sm font-semibold'>{name}</span>
+            </div>
+            <DevMode data={data} />
             <ThreadSourceHandle active={isConnectable} />
         </Card>
     );

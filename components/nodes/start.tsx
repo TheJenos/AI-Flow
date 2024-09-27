@@ -1,8 +1,7 @@
-import { NodeProps } from '@xyflow/react';
 import { PlayCircle, Plus, Trash } from 'lucide-react';
 import { Card } from '../ui/card';
 import { useState } from 'react';
-import useFlowStore, { AppNode } from '@/lib/store';
+import { useFlowStore, AppNode, AppNodeProp } from '@/lib/store';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -10,10 +9,11 @@ import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { set, cloneDeep } from 'lodash'
 import ConfirmAlert from '../confirm_alert';
-import { NodeMetaData, NodeState } from '@/lib/nodes';
+import { AppContext, NodeMetaData, NodeState } from '@/lib/nodes';
 import { cva } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 import { ThreadSourceHandle } from '../thread_handle';
+import DevMode from '../dev_mode';
 
 type Property = { name: string; type: string };
 
@@ -24,10 +24,10 @@ export const Metadata: NodeMetaData = {
     notAddable: true
 }
 
-export const Process = async (context: {[key: string]: string | number | object }, node: AppNode) => {
+export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[]) => {
     console.log("start node",'context', context, 'node', node);
     context['run'] =0;
-    return context
+    return nextNodes
 }
 
 export const Properties = ({ node }: { node: AppNode }) => {
@@ -160,7 +160,7 @@ export const Properties = ({ node }: { node: AppNode }) => {
 };
 
 const noteStateVariants = cva(
-    "bg-green-600 bg-opacity-70 px-3 py-2 flex gap-2 items-center rounded-3xl text-white",
+    "bg-green-600 bg-opacity-70 px-3 py-2 flex flex-col gap-2 items-center rounded-3xl text-white",
     {
         variants: {
             state: {
@@ -177,12 +177,16 @@ const noteStateVariants = cva(
     }
 )
 
-export function Node({ isConnectable, data }: NodeProps) {
+export function Node({ isConnectable, data }: AppNodeProp) {
     const state = (data.state || 'idle') as NodeState;
 
     return (
         <Card className={cn(noteStateVariants({ state }))}>
-            <PlayCircle /> <span className='text-sm font-semibold'>Start</span>
+            <div className='flex gap-2'>
+                <PlayCircle /> 
+                <span className='text-sm font-semibold'>Start</span>
+            </div>
+            <DevMode data={data}/>
             <ThreadSourceHandle active={isConnectable} />
         </Card>
     );

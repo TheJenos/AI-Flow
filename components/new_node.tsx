@@ -2,14 +2,17 @@ import { Plus } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Toggle } from "./ui/toggle";
 import { useEffect, useState } from "react";
-import useStore from "@/lib/store";
+import { useFlowStore } from "@/lib/store";
 import { nodeDetails } from "@/lib/nodes";
+import { useShallow } from "zustand/shallow";
 
 export default function NewNode() {
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState('');
-    const setNodes = useStore().setNodes;
-    const nodes = useStore().nodes;
+    const { nodes, setNodes } = useFlowStore(useShallow((state) => ({
+        nodes:state.nodes,
+        setNodes:state.setNodes
+    })))
 
     useEffect(() => {
         if (open) {
@@ -29,7 +32,8 @@ export default function NewNode() {
             type: node.type,
             position: { x: 0, y: 0 },
             data: {
-                thread: Math.random().toString(16).slice(2)
+                state: 'idle',
+                thread: Math.random().toString(16).slice(2),
             }
         }]);
     }
@@ -60,7 +64,7 @@ export default function NewNode() {
                                     onClick={() => handleNodeClick(node)}
                                 >
                                     <div className="flex items-center justify-center p-5 w-full bg-accent">
-                                      <Node id={''} data={{}} dragging={false} isConnectable={false} positionAbsoluteX={0} positionAbsoluteY={0} type={''} zIndex={0} />
+                                      <Node id={''} data={{state: 'idle',thread: 'main'}} dragging={false} isConnectable={false} positionAbsoluteX={0} positionAbsoluteY={0} type={''} zIndex={0} />
                                     </div>
                                     <div className="flex flex-col py-2">
                                         <span className="text-sm font-medium">{node.name}</span>

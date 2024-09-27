@@ -1,8 +1,7 @@
-import { NodeProps } from '@xyflow/react';
 import { Split } from 'lucide-react';
 import { Card } from '../ui/card';
-import { NodeMetaData, NodeState } from '@/lib/nodes';
-import useFlowStore, { AppNode } from '@/lib/store';
+import { AppContext, NodeMetaData, NodeState } from '@/lib/nodes';
+import { useFlowStore, AppNode, AppNodeProp } from '@/lib/store';
 import { cloneDeep, set } from 'lodash';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
@@ -11,6 +10,7 @@ import { cva } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 import NoteIcon from '../node_icon';
 import { ThreadSourceHandle, ThreadTargetHandle } from '../thread_handle';
+import DevMode from '../dev_mode';
 
 export const Metadata: NodeMetaData = {
     type: 'multi_thread',
@@ -18,10 +18,11 @@ export const Metadata: NodeMetaData = {
     description: 'This node allows you to run multiple threads in parallel'
 }
 
-export const Process = async (context: {[key: string]: string | number | object}, node: AppNode) => {
-    console.log("multi_thread node",'context', context, 'node', node);
+export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[]) => {
+    console.log("multi_thread node", 'context', context, 'node', node);
     context['run'] = (context['run'] as number) + 1;
-    return context
+    // throw new Error("test");
+    return nextNodes
 }
 
 export const Properties = ({ node }: { node: AppNode }) => {
@@ -35,11 +36,12 @@ export const Properties = ({ node }: { node: AppNode }) => {
 
     return (
         <div className='flex flex-col gap-2 px-2'>
-            <div className='flex flex-col gap-1'> 
+            <div className='flex flex-col gap-1'>
                 <Label>Name</Label>
                 <Input
                     name="name"
                     value={node.data.name as string}
+                    placeholder={Metadata.name}
                     onChange={(e) => setValue('name', e.target.value)}
                 />
             </div>
@@ -48,7 +50,7 @@ export const Properties = ({ node }: { node: AppNode }) => {
 }
 
 const noteStateVariants = cva(
-    "bg-blue-600 bg-opacity-80 p-2 flex gap-2 items-center text-white",
+    "bg-blue-600 bg-opacity-80 p-2 flex flex-col gap-2 items-center text-white",
     {
         variants: {
             state: {
@@ -65,18 +67,21 @@ const noteStateVariants = cva(
     }
 )
 
-export function Node({ isConnectable, data }: NodeProps) {
+export function Node({ isConnectable, data }: AppNodeProp) {
     const name = useMemo(() => {
-        return (data?.name || 'Multi Tread') as string;
+        return (data?.name  || Metadata.name) as string;
     }, [data?.name]);
 
     const state = (data.state || 'idle') as NodeState;
-    const thread = (data.thread || 'not found') as string;
 
     return (
         <Card className={cn(noteStateVariants({ state }))}>
             <ThreadTargetHandle active={isConnectable} />
-            <NoteIcon state={state} idleIcon={Split} className='rotate-180' />  <span className='text-sm font-semibold'>{name} {thread}</span>
+            <div className='flex gap-2'>
+                <NoteIcon state={state} idleIcon={Split} className='rotate-180' />
+                <span className='text-sm font-semibold'>{name}</span>
+            </div>
+            <DevMode data={data} />
             <ThreadSourceHandle active={isConnectable} type='multi' />
         </Card>
     );

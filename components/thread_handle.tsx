@@ -1,4 +1,4 @@
-import useFlowStore, { AppNode } from "@/lib/store";
+import { useFlowStore,  AppNode } from "@/lib/store";
 import { Handle, Position, Edge, Connection, getIncomers, getOutgoers, useHandleConnections } from "@xyflow/react";
 
 type ThreadHandleProp = {
@@ -18,7 +18,7 @@ export function ThreadTargetHandle({ active = true, type = 'normal' }: ThreadHan
 
         const otherNode = nodes.find(x => x.id == connection.source) as AppNode
 
-        if (otherNode.type == "multi_thread") return true
+        if (otherNode.type == "multi_thread" || otherNode.type == "decision") return true
 
         const outgoers = getOutgoers(otherNode, nodes, edges)
         if (connections.length == 0 && outgoers.length == 0) return true
@@ -58,7 +58,7 @@ export function ThreadSourceHandle({ active = true, type = 'normal' }: ThreadHan
         
         const selfNode = nodes.find(x => x.id == connection.source) as AppNode
 
-        if (selfNode.type == "multi_thread") return true
+        if (selfNode.type == "multi_thread" || otherNode.type == "decision") return true
 
         return selfNode?.data.thread == otherNode?.data.thread;
     }
