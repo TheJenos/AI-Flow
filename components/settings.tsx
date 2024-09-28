@@ -13,8 +13,8 @@ import {
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { Bolt } from "lucide-react";
-import { useSettingStore } from "@/lib/store";
+import { Bolt, DollarSign, MoveDown, MoveUp, Timer } from "lucide-react";
+import { useRuntimeStore, useSettingStore } from "@/lib/store";
 import { useShallow } from "zustand/shallow";
 import { Switch } from "./ui/switch";
 
@@ -26,6 +26,13 @@ export default function Settings() {
         setDevMode: state.setDevMode
     })))
 
+    const { duration, inToken, outToken, amount } = useRuntimeStore(useShallow((state) => ({
+        duration: state.duration,
+        inToken: state.inToken,
+        outToken: state.outToken,
+        amount: state.amount,
+    })))
+
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.target as HTMLFormElement);
@@ -35,6 +42,16 @@ export default function Settings() {
 
     return (
         <Card className="absolute top-2 right-2 p-1 flex gap-1 z-50">
+            <div className="flex gap-2 items-center text-xs">
+                <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-1"><MoveUp size={16}/>{inToken}</div>
+                    <div className="flex items-center gap-1"><MoveDown size={16}/>{outToken}</ div>
+                </div>
+                <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-1"><DollarSign size={16}/>{amount}</div>
+                    <div className="flex items-center gap-1"><Timer size={16}/>{duration}</div>
+                </div>
+            </div>
             <Dialog>
                 <DialogTrigger>
                     <Toggle>

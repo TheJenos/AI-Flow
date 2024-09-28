@@ -58,7 +58,7 @@ export function ThreadSourceHandle({ active = true, type = 'normal' }: ThreadHan
         
         const selfNode = nodes.find(x => x.id == connection.source) as AppNode
 
-        if (selfNode.type == "multi_thread" || otherNode.type == "decision") return true
+        if (selfNode.type == "multi_thread" || selfNode.type == "decision") return true
 
         return selfNode?.data.thread == otherNode?.data.thread;
     }

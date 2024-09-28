@@ -3,8 +3,7 @@ import { addEdge, applyNodeChanges, applyEdgeChanges, getOutgoers, NodeProps } f
 import { createComputed } from "zustand-computed";
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Edge, Node, OnNodesChange, OnEdgesChange, OnConnect } from '@xyflow/react';
-import { NodeState, NodeType } from './nodes';
-import { set } from 'lodash';
+import { getNodeDetails, NodeState, NodeType } from './nodes';
 
 export type NodeData = {
     state: NodeState
@@ -17,8 +16,8 @@ export type AppNodeProp = NodeProps & {
     data: NodeData
 }
 
-export type AppNode = Node & { 
-    type: NodeType 
+export type AppNode = Node & {
+    type: NodeType
     data: NodeData
 };
 
@@ -31,12 +30,27 @@ export type AppState = {
     setNodes: (nodes: AppNode[]) => void;
     setEdges: (edges: Edge[]) => void;
     updateNode: (updatedNode: AppNode) => void;
+    updateEdge: (updatedEdge: Edge) => void;
 };
 
 export type RuntimeState = {
     isRunning: boolean;
+    logs: string[];
+    duration: number;
+    inToken: number;
+    outToken: number;
+    amount: number;
     start: () => void;
     stop: () => void;
+    log: (...logData:unknown[]) => void;
+    increaseDuration: (amount?: number) => void;
+    increaseInToken: (amount: number) => void;
+    increaseOutToken: (amount: number) => void;
+    increaseAmount:(amount: number) => void;
+    setDuration: (duration: number) => void;
+    setInToken: (inToken: number) => void;
+    setOutToken: (outToken: number) => void;
+    setAmount: (amount: number) => void;
 };
 
 export type SettingsState = {
@@ -58,24 +72,42 @@ export const useSettingStore = create<SettingsState>()(persist(set => ({
 
 export const useRuntimeStore = create<RuntimeState>()(set => ({
     isRunning: false,
-    start: () => set({ isRunning: true }),
-    stop: () => set({ isRunning: false })
+    logs: [],
+    duration: 0,
+    inToken: 0,
+    outToken: 0,
+    amount: 0,
+    start: () => set({ isRunning: true, duration: 0, inToken: 0, outToken: 0, amount: 0 }),
+    stop: () => set({ isRunning: false }),
+    log: (...logData) => set((state) => ({ logs: [...state.logs, ...logData.map(x => JSON.stringify(x))] })),
+    increaseDuration: (amount = 1) => set((state) => ({ duration: state.duration + amount })),
+    increaseInToken: (amount) => set((state) => ({ inToken: state.inToken + amount })),
+    increaseOutToken: (amount) => set((state) => ({ outToken: state.outToken + amount })),
+    increaseAmount: (amount) => set((state) => ({ amount: state.amount + amount })),
+    setDuration: (duration) => set({ duration }),
+    setInToken: (inToken) => set({ inToken }),
+    setOutToken: (outToken) => set({ outToken }),
+    setAmount: (amount) => set({ amount }),
+
 }));
 
-const processDecisionNode = (
+const processOnDisconnect = (
     targetNode: AppNode,
     sourceNode: AppNode,
     updates: { [key: string]: unknown },
 ) => {
-    if (targetNode.type == 'decision') {
-       set(updates,`${targetNode.id}.decisions`, Object.fromEntries(Object.entries(targetNode.data.decisions as object).filter(([key]) => key != sourceNode.id)))
+    const targetNodeDetails = getNodeDetails(targetNode.type);
+    const sourceNodeDetails = getNodeDetails(sourceNode.type);
+
+    if (targetNodeDetails.OnDisconnect) {
+        targetNodeDetails.OnDisconnect(targetNode, sourceNode, updates)
     }
 
-    if (sourceNode.type == 'decision') {
-        set(updates,`${sourceNode.id}.decisions`, Object.fromEntries(Object.entries(sourceNode.data.decisions as object).filter(([key]) => key != targetNode.id)))
+    if (sourceNodeDetails.OnDisconnect) {
+        sourceNodeDetails.OnDisconnect(sourceNode, targetNode, updates);
     }
 }
- 
+
 const processNodeThread = (
     nodesToProcess: { node: AppNode, parentNode?: AppNode }[],
     nodes: AppNode[],
@@ -131,7 +163,7 @@ export const useFlowStore = create<AppState>()(persist(computed((set, get) => ({
             if (!targetNode || !sourceNode || targetNode.type === 'thread_merge' ||
                 (targetNode.data.parentId !== sourceNode.id && targetNode.data.thread === sourceNode.data.thread)) continue;
 
-            processDecisionNode(targetNode, sourceNode, updates)
+            processOnDisconnect(targetNode, sourceNode, updates)
 
             const nodesToProcess = [{ node: targetNode }];
             processNodeThread(nodesToProcess, nodes, edges, updates, newThread);
@@ -144,13 +176,33 @@ export const useFlowStore = create<AppState>()(persist(computed((set, get) => ({
     },
     onConnect: connection => {
         const { edges, nodes } = get();
+        let newEdges = addEdge(connection, edges).map(x => (Object.fromEntries(Object.entries(x).filter(([key]) => !['markerEnd', 'style'].includes(key))) as Edge))
         const sourceNode = nodes.find(node => node.id === connection.source);
         const sourceThread = ((!sourceNode || sourceNode.type === 'multi_thread') ? Math.random().toString(16).slice(2) : sourceNode.data.thread) as string;
         const targetNode = nodes.find(node => node.id === connection.target);
 
         if (!sourceNode || !targetNode) return;
+        if (sourceNode.type == 'decision') {
+            newEdges = newEdges.map(x => {
+                if (x.source == sourceNode.id && x.target == targetNode.id) {
+                    return {
+                        ...x,
+                        animated: true,
+                        label: 'Name and Logic required',
+                        labelShowBg: true,
+                        labelBgPadding: [5,5],
+                        labelBgBorderRadius: 8,
+                        labelBgStyle: {
+                            stroke: 'black'
+                        }
+                    }
+                }
+                return x
+            })
+        }
+
         if (targetNode.type === 'thread_merge' || (targetNode.data.parentId !== sourceNode.id && sourceNode.data.thread === targetNode.data.thread)) {
-            set({ edges: addEdge(connection, edges) });
+            set({ edges: newEdges });
             return;
         }
 
@@ -159,7 +211,7 @@ export const useFlowStore = create<AppState>()(persist(computed((set, get) => ({
         processNodeThread(nodesToProcess, nodes, edges, updates, sourceThread);
 
         set({
-            edges: addEdge(connection, edges),
+            edges: newEdges,
             nodes: nodes.map(node => node.id in updates ? { ...node, data: { ...node.data, ...updates[node.id] } } : node)
         });
     },
@@ -167,9 +219,12 @@ export const useFlowStore = create<AppState>()(persist(computed((set, get) => ({
     setEdges: edges => set({ edges }),
     updateNode: updatedNode => set({
         nodes: get().nodes.map(node => node.id === updatedNode.id ? { ...node, ...updatedNode } : node)
+    }),
+    updateEdge: updatedEdge => set({
+        edges: get().edges.map(edge => edge.id === updatedEdge.id ? { ...edge, ...updatedEdge } : edge)
     })
 })), {
     name: 'flow-store',
     storage: createJSONStorage(() => localStorage),
-    partialize: (state) =>Object.fromEntries(Object.entries(state).filter(([key]) => !['isOnlyOneSelected', 'selectedNode'].includes(key)))
+    partialize: (state) => Object.fromEntries(Object.entries(state).filter(([key]) => !['isOnlyOneSelected', 'selectedNode'].includes(key)))
 }));

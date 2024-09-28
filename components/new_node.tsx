@@ -45,7 +45,7 @@ export default function NewNode() {
                     <Plus size={20} />
                 </Toggle>
             </PopoverTrigger>
-            <PopoverContent align="start" alignOffset={-2} sideOffset={10} side="bottom" className="w-60 p-0">
+            <PopoverContent align="start" alignOffset={-2} sideOffset={10} side="bottom" className="p-0">
                 <input
                     type="text"
                     placeholder="Search nodes..."

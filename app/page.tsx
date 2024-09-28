@@ -2,7 +2,7 @@
 
 import { nodeTypes } from '@/lib/nodes';
 import { useFlowStore } from '@/lib/store';
-import { Background, BackgroundVariant, ReactFlow } from '@xyflow/react';
+import { Background, BackgroundVariant, MarkerType, ReactFlow } from '@xyflow/react';
 
 import '@xyflow/react/dist/style.css';
 import { useShallow } from 'zustand/shallow';
@@ -27,13 +27,25 @@ export default function Home() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
+        defaultEdgeOptions={{
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            width: 15,
+            height: 15,
+          },
+          style: {
+            strokeWidth: 2,
+          }
+        }}
+        snapToGrid
+        snapGrid={[20,20]}
         fitView
         fitViewOptions={{
           padding: 0.3
         }}
-        maxZoom={1}
+        maxZoom={1.5}
         >
-        <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+        <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
       </ReactFlow>
     </div>
   );

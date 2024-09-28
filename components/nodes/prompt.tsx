@@ -1,6 +1,6 @@
 import { ScrollText } from 'lucide-react';
 import { Card } from '../ui/card';
-import { AppContext, NodeMetaData, NodeState } from '@/lib/nodes';
+import { AppContext, NodeMetaData, NodeState, StatsUpdater } from '@/lib/nodes';
 import { useFlowStore, AppNode, AppNodeProp } from '@/lib/store';
 import { cloneDeep, set } from 'lodash';
 import { Label } from '../ui/label';
@@ -20,10 +20,13 @@ export const Metadata: NodeMetaData = {
     description: 'Generate a response based on the given prompt'
 }
 
-export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[]) => {
-    await new Promise(resolve => setTimeout(resolve, Math.random() * 5000));
-    console.log("prompt node", node.data.name, 'context', context, 'node', node);
-    context['run'] = (context['run'] as number) + 1;
+export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[], statsUpdater: StatsUpdater) => {
+    const randomVal = Math.floor(Math.random() * 5000)
+    await new Promise(resolve => setTimeout(resolve, randomVal));
+    statsUpdater.log("prompt node", node.data.name, 'context', cloneDeep(context), 'node', node);
+    statsUpdater.increaseInToken(randomVal)
+    context[node.id]['name'] = node.data.name || 'hi'
+    context[node.id]['count'] = (context[node.id]['count'] || 0) as number + 1
     return nextNodes
 }
 

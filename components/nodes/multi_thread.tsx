@@ -1,6 +1,6 @@
 import { Split } from 'lucide-react';
 import { Card } from '../ui/card';
-import { AppContext, NodeMetaData, NodeState } from '@/lib/nodes';
+import { AppContext, NodeMetaData, NodeState, StatsUpdater } from '@/lib/nodes';
 import { useFlowStore, AppNode, AppNodeProp } from '@/lib/store';
 import { cloneDeep, set } from 'lodash';
 import { Label } from '../ui/label';
@@ -18,10 +18,9 @@ export const Metadata: NodeMetaData = {
     description: 'This node allows you to run multiple threads in parallel'
 }
 
-export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[]) => {
-    console.log("multi_thread node", 'context', context, 'node', node);
-    context['run'] = (context['run'] as number) + 1;
-    // throw new Error("test");
+export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[], statsUpdater: StatsUpdater) => {
+    statsUpdater.log("multi_thread node", 'context', context, 'node', node);
+    context[node.id]['name'] = node.data.name || 'hi'
     return nextNodes
 }
 

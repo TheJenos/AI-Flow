@@ -6,7 +6,7 @@ export default function DevMode({data }:{data:NodeData}) {
     if(!isDevMode) return null;
 
     return (
-        <div className='text-sm font-semibold whitespace-pre'>
+        <div className='text-xs font-semibold whitespace-pre'>
             {data.thread}
             {/* {JSON.stringify(data, null , 2)} */}
         </div>

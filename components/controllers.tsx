@@ -3,10 +3,11 @@ import { Card } from "./ui/card";
 import { Toggle } from "./ui/toggle";
 import { PlayCircle, Scan, StopCircle } from "lucide-react";
 import { useShallow } from "zustand/shallow";
-import { getNodeDetails, NodeState } from "@/lib/nodes";
+import { AppContext, getNodeDetails, NodeState } from "@/lib/nodes";
 import { getOutgoers, useReactFlow } from "@xyflow/react";
 import { cloneDeep, set } from "lodash";
 import { AppNode, useFlowStore, useRuntimeStore } from "@/lib/store";
+import { useEffect } from "react";
 
 export default function Controllers() {
   const { nodes, edges, updateNode } = useFlowStore(useShallow(s => ({
@@ -15,18 +16,32 @@ export default function Controllers() {
     updateNode: s.updateNode
   })));
 
-  const { isRunning, start, stop} = useRuntimeStore(useShallow(s => ({
+  const { isRunning, start, stop, increaseDuration, increaseInToken, increaseOutToken, increaseAmount} = useRuntimeStore(useShallow(s => ({
     isRunning: s.isRunning,
     start: s.start,
-    stop: s.stop
+    stop: s.stop,
+    log: s.log,
+    increaseDuration: s.increaseDuration,
+    increaseInToken: s.increaseInToken,
+    increaseOutToken: s.increaseOutToken,
+    increaseAmount: s.increaseAmount,
   })));
 
   const reactFlow = useReactFlow();
 
-  const updateNodeState = (node: AppNode, state: NodeState) => {
+  const updateNodeState = (node: AppNode, state: NodeState, context?: AppContext) => {
     const clonedNode = cloneDeep(node);
     set(clonedNode, 'data.state', state);
+    if (context) set(context,`${node.id}.state`, state)
     updateNode(clonedNode);
+  }
+
+  const makeAllNodesState = (node: AppNode, state: NodeState, context?: AppContext, path: string[] = []) => {
+    if (path.includes(node.id)) return;
+    updateNodeState(node, state, context);
+    const outgoers = getOutgoers(node, nodes, edges);
+    path.push(node.id);
+    outgoers.forEach((outgoer) => makeAllNodesState(outgoer, state,context, path));
   }
 
   const startWrapper = async () => {
@@ -35,14 +50,13 @@ export default function Controllers() {
     const startNode = nodes.find((node: AppNode) => node.type === 'start');
     if (!startNode) return;
     start();
-
-    const makeAllNodesState = (node: AppNode, state: NodeState, path: string[] = []) => {
-      if (path.includes(node.id)) return;
-      updateNodeState(node, state);
-      const outgoers = getOutgoers(node, nodes, edges);
-      path.push(node.id);
-      outgoers.forEach((outgoer) => makeAllNodesState(outgoer, state, path));
+    const statsUpdater = {
+      log: console.log,
+      increaseInToken,
+      increaseOutToken,
+      increaseAmount
     }
+    const timer = setInterval(() => increaseDuration(), 1000)
 
     const processNode = async (node: AppNode): Promise<void> => {
       const isRunning = useRuntimeStore.getState().isRunning;
@@ -56,29 +70,37 @@ export default function Controllers() {
       let next = []
 
       try {
-        updateNodeState(node, 'running');
-        next = await details.process(context, node, outgoers);
-        updateNodeState(node, 'completed');
+        updateNodeState(node, 'running', context);
+        next = await details.process(context, node, outgoers, statsUpdater);
+        updateNodeState(node, 'completed', context);
       } catch (error) {
         console.log(error);
-        updateNodeState(node, 'failed');
-        outgoers.forEach(x => makeAllNodesState(x,'failed'))
+        updateNodeState(node, 'failed', context);
+        outgoers.forEach(x => makeAllNodesState(x,'failed', context))
         return;
       }
       
       await Promise.all(next.map(processNode));
     };
 
-    makeAllNodesState(startNode, 'waiting');
+    makeAllNodesState(startNode, 'waiting', context);
     await processNode(startNode);
 
     stop();
+    clearInterval(timer);
     setTimeout(() => {
       nodes.forEach((node: AppNode) => {
         updateNodeState(node, 'idle');
       });
     }, 3000);
   }
+
+  useEffect(() => {
+    nodes.forEach((node: AppNode) => {
+      updateNodeState(node, 'idle');
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <Card className="absolute top-2 left-1/2 -translate-x-1/2 p-1 flex gap-1 z-50">

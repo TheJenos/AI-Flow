@@ -9,7 +9,7 @@ import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { set, cloneDeep } from 'lodash'
 import ConfirmAlert from '../confirm_alert';
-import { AppContext, NodeMetaData, NodeState } from '@/lib/nodes';
+import { AppContext, NodeMetaData, NodeState, StatsUpdater } from '@/lib/nodes';
 import { cva } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 import { ThreadSourceHandle } from '../thread_handle';
@@ -24,9 +24,11 @@ export const Metadata: NodeMetaData = {
     notAddable: true
 }
 
-export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[]) => {
-    console.log("start node",'context', context, 'node', node);
-    context['run'] =0;
+export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[], statsUpdater: StatsUpdater) => {
+    statsUpdater.log("start node",'context', context, 'node', node);
+    context[node.id] = {
+        values: node.data.propertyValues as object
+    }
     return nextNodes
 }
 
