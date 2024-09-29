@@ -3,7 +3,6 @@
 import localFont from "next/font/local";
 import "./globals.css";
 import { ReactNode } from "react";
-import { ReactFlowProvider } from "@xyflow/react";
 import BaseLayout from "@/components/base_layout";
 
 const geistSans = localFont({
@@ -33,11 +32,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        <ReactFlowProvider>
           <BaseLayout>
             {children}
           </BaseLayout>
-        </ReactFlowProvider>
       </body>
     </html>
   );

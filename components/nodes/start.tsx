@@ -1,5 +1,4 @@
 import { PlayCircle, Plus, Trash } from 'lucide-react';
-import { Card } from '../ui/card';
 import { useState } from 'react';
 import { useFlowStore, AppNode, AppNodeProp } from '@/lib/store';
 import { Input } from '../ui/input';
@@ -9,7 +8,7 @@ import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { set, cloneDeep } from 'lodash'
 import ConfirmAlert from '../confirm_alert';
-import { AppContext, NodeMetaData, NodeState, StatsUpdater } from '@/lib/nodes';
+import { AppContext, NodeMetaData, NodeState, StatsUpdater, NodeOutput } from '@/lib/nodes';
 import { cva } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 import { ThreadSourceHandle } from '../thread_handle';
@@ -21,14 +20,27 @@ export const Metadata: NodeMetaData = {
     type: 'start',
     name: 'Start',
     description: 'The first node in the flow. Please add a your initial values here.',
+    tags: [],
     notAddable: true
 }
 
-export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[], statsUpdater: StatsUpdater) => {
-    statsUpdater.log("start node",'context', context, 'node', node);
-    context[node.id] = {
-        values: node.data.propertyValues as object
+export const Outputs = (node: AppNode) => {
+    const outputs = {} as NodeOutput
+    const propValue = node.data.propertyValues as { [key: string]: string }
+
+    for (const key in propValue) {
+        outputs[key] = {
+            title: key,
+            value: propValue[key]
+        }
     }
+
+    return outputs;
+}
+
+export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[], statsUpdater: StatsUpdater) => {
+    statsUpdater.log("start node", 'context', context, 'node', node);
+    context[node.id] = Object.fromEntries(Object.entries(Outputs(node)).map(([key,value]) => [key, value.value]))
     return nextNodes
 }
 
@@ -82,13 +94,13 @@ export const Properties = ({ node }: { node: AppNode }) => {
         const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
             setPropertyValues({
                 ...propertyValues,
-                [prop.name]:  e.target.value
+                [prop.name]: e.target.value
             });
             const clonedNode = cloneDeep(node);
-            set(clonedNode, `data.propertyValues.${prop.name}`,  e.target.value);
+            set(clonedNode, `data.propertyValues.${prop.name}`, e.target.value);
             updateNode(clonedNode);
         };
-        
+
         switch (prop.type) {
             case 'textarea':
                 return <Textarea id={prop.name} className='' placeholder={prop.name} value={value} onChange={handleChange} />;
@@ -162,11 +174,12 @@ export const Properties = ({ node }: { node: AppNode }) => {
 };
 
 const noteStateVariants = cva(
-    "bg-green-600 bg-opacity-70 px-3 py-2 flex flex-col gap-2 items-center rounded-3xl text-white",
+    "bg-white border-2 border-green-600 text-green-600 px-3 py-2 flex flex-col gap-2 items-center rounded-3xl", //tw
     {
         variants: {
             state: {
                 idle: 'bg-opacity-80',
+                faded: 'opacity-20', //tw
                 waiting: 'bg-opacity-20',
                 running: 'bg-opacity-40',
                 completed: 'bg-opacity-80',
@@ -183,13 +196,13 @@ export function Node({ isConnectable, data }: AppNodeProp) {
     const state = (data.state || 'idle') as NodeState;
 
     return (
-        <Card className={cn(noteStateVariants({ state }))}>
-            <div className='flex gap-2'>
-                <PlayCircle /> 
+        <div className={cn(noteStateVariants({ state }))}>
+            <div className='flex gap-2 items-center'>
+                <PlayCircle />
                 <span className='text-sm font-semibold'>Start</span>
             </div>
-            <DevMode data={data}/>
+            <DevMode data={data} />
             <ThreadSourceHandle active={isConnectable} />
-        </Card>
+        </div>
     );
 }

@@ -22,7 +22,7 @@ export default function NewNode() {
 
     const filteredNodes = nodeDetails.filter(node => !node.notAddable).filter(node =>
         node.name.toLowerCase().includes(search.toLowerCase()) ||
-        node.description.toLowerCase().includes(search.toLowerCase())
+        node.tags.join(" ").toLowerCase().includes(search.toLowerCase())
     );
 
     const handleNodeClick = (node: typeof nodeDetails[number]) => {
@@ -53,7 +53,7 @@ export default function NewNode() {
                     onChange={(e) => setSearch(e.target.value)}
                     className="h-8 text-sm px-2 w-full outline-none bg-transparent"
                 />
-                <div className="flex flex-col bg-white rounded-b-md border-t-2 border-accent h-36 overflow-y-auto">
+                <div className="flex flex-col bg-white rounded-b-md border-t-2 border-accent h-44 overflow-y-auto">
                     {filteredNodes.length > 0 ? (
                         filteredNodes.map((node, index) => {
                             const Node = node.node;

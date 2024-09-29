@@ -4,6 +4,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./ui/resiz
 import { useEffect, useRef } from "react";
 import { ImperativePanelHandle } from "react-resizable-panels";
 import Properties from "./properties";
+import { ReactFlowProvider } from "@xyflow/react";
 
 export default function BaseLayout({ children }: { children: React.ReactNode }) {
     const isOnlyOneSelected = useFlowStore((state) => state.isOnlyOneSelected);
@@ -14,7 +15,7 @@ export default function BaseLayout({ children }: { children: React.ReactNode }) 
         const sidebar = sidebarRef.current;
         if (isOnlyOneSelected && sidebar.isCollapsed()) {
             sidebar.expand();
-        }else{
+        } else {
             sidebar.collapse();
         }
     }, [isOnlyOneSelected]);
@@ -22,12 +23,14 @@ export default function BaseLayout({ children }: { children: React.ReactNode }) 
     return (
         <ResizablePanelGroup direction="horizontal">
             <ResizablePanel defaultSize={75} className="relative h-screen">
-                <Topbar />
-                {children}
+                <ReactFlowProvider>
+                    <Topbar />
+                    {children}
+                </ReactFlowProvider>
             </ResizablePanel>
             <ResizableHandle withHandle={isOnlyOneSelected} />
             <ResizablePanel ref={sidebarRef} collapsible maxSize={30} defaultSize={0} minSize={25}>
-                <Properties/>
+                <Properties />
             </ResizablePanel>
         </ResizablePanelGroup>
     );

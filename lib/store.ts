@@ -113,10 +113,15 @@ const processNodeThread = (
     nodes: AppNode[],
     edges: Edge[],
     updates: { [key: string]: { thread: string, parentId?: string } },
-    thread: string
+    thread: string,
+    edgeRemover?: ((sourceNode: AppNode, targetNode: AppNode) => void | undefined) 
 ) => {
     while (nodesToProcess.length > 0) {
         const { node: currentNode, parentNode } = nodesToProcess.pop()!;
+        if (edgeRemover && !!currentNode.data.parentId &&  !!parentNode?.id && currentNode.data.parentId != parentNode?.id) {
+            edgeRemover(parentNode, currentNode)
+            return
+        }
         if (currentNode.type === 'thread_merge') continue;
         if (!(currentNode.id in updates)) {
             updates[currentNode.id] = { thread, parentId: parentNode?.id };
@@ -154,6 +159,7 @@ export const useFlowStore = create<AppState>()(persist(computed((set, get) => ({
         const removedEdges = edges.filter(edge => removedEdgesId.includes(edge.id));
 
         const updates: { [key: string]: { thread: string, parentId?: string } } = {};
+        const removeEdges: string[] = [];
 
         for (const edge of removedEdges) {
             const newThread = Math.random().toString(16).slice(2);
@@ -166,11 +172,15 @@ export const useFlowStore = create<AppState>()(persist(computed((set, get) => ({
             processOnDisconnect(targetNode, sourceNode, updates)
 
             const nodesToProcess = [{ node: targetNode }];
-            processNodeThread(nodesToProcess, nodes, edges, updates, newThread);
+            
+            processNodeThread(nodesToProcess, nodes, edges, updates, newThread, (sourceNode, targetNode) => {
+                const needToRemoveEdge = edges.find(x => x.source == sourceNode.id &&  x.target == targetNode.id)
+                if (needToRemoveEdge) removeEdges.push(needToRemoveEdge.id)
+            });
         }
 
         set({
-            edges: applyEdgeChanges(changes, edges),
+            edges: applyEdgeChanges(changes, edges.filter(x => !removeEdges.includes(x.id))),
             nodes: nodes.map(node => node.id in updates ? { ...node, data: { ...node.data, ...updates[node.id] } } : node),
         });
     },
@@ -188,7 +198,7 @@ export const useFlowStore = create<AppState>()(persist(computed((set, get) => ({
                     return {
                         ...x,
                         animated: true,
-                        label: 'Name and Logic required',
+                        label: 'Name and Condition required',
                         labelShowBg: true,
                         labelBgPadding: [5,5],
                         labelBgBorderRadius: 8,

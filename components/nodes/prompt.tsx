@@ -1,6 +1,5 @@
 import { ScrollText } from 'lucide-react';
-import { Card } from '../ui/card';
-import { AppContext, NodeMetaData, NodeState, StatsUpdater } from '@/lib/nodes';
+import { AppContext, NodeMetaData, NodeOutput, NodeState, StatsUpdater } from '@/lib/nodes';
 import { useFlowStore, AppNode, AppNodeProp } from '@/lib/store';
 import { cloneDeep, set } from 'lodash';
 import { Label } from '../ui/label';
@@ -17,7 +16,18 @@ import DevMode from '../dev_mode';
 export const Metadata: NodeMetaData = {
     type: 'prompt',
     name: 'OpenAI Chat Prompt',
-    description: 'Generate a response based on the given prompt'
+    description: 'Generate a response based on the given prompt',
+    tags: ['OpenAI', 'ChatGPT', 'prompt']
+}
+
+export const Outputs = (node: AppNode) => {
+    return {
+        name: {
+            title: 'Node name',
+            description: 'Node display name',
+            value: node.data.name
+        }
+    } as NodeOutput
 }
 
 export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[], statsUpdater: StatsUpdater) => {
@@ -78,11 +88,12 @@ export const Properties = ({ node }: { node: AppNode }) => {
 }
 
 const noteStateVariants = cva(
-    "bg-red-600 p-2 flex flex-col gap-2 rounded-none items-center text-white transition-all duration-300",
+    "bg-white border-2 text-red-600 border-red-600 p-2 flex flex-col gap-2 rounded-md items-center  transition-all duration-300", //tw
     {
         variants: {
             state: {
                 idle: 'bg-opacity-80',
+                faded: 'opacity-20', //tw
                 waiting: 'bg-opacity-20',
                 running: 'bg-opacity-40',
                 completed: 'bg-opacity-80',
@@ -103,7 +114,7 @@ export function Node({ isConnectable, data }: AppNodeProp) {
     const state = (data.state || 'idle') as NodeState;
 
     return (
-        <Card className={cn(noteStateVariants({ state }))}>
+        <div className={cn(noteStateVariants({ state }))}>
             <ThreadTargetHandle active={isConnectable} />
             <div className='flex gap-2'>
                 <NoteIcon state={state} idleIcon={ScrollText} /> 
@@ -111,6 +122,6 @@ export function Node({ isConnectable, data }: AppNodeProp) {
             </div>
             <DevMode data={data} />
             <ThreadSourceHandle active={isConnectable} />
-        </Card>
+        </div>
     );
 }

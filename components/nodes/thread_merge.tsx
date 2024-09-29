@@ -1,6 +1,5 @@
 import { getIncomers } from '@xyflow/react';
 import { Merge } from 'lucide-react';
-import { Card } from '../ui/card';
 import { AppContext, NodeMetaData, NodeState, StatsUpdater } from '@/lib/nodes';
 import { useFlowStore, AppNode, AppNodeProp } from '@/lib/store';
 import { cloneDeep, set } from 'lodash';
@@ -16,7 +15,8 @@ import DevMode from '../dev_mode';
 export const Metadata: NodeMetaData = {
     type: 'thread_merge',
     name: 'Thread Merge',
-    description: 'This node will wait until all connected parallel threads ends'
+    description: 'This node will wait until all connected parallel threads ends',
+    tags: ['await', 'sync']
 }
 
 export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[], statsUpdater: StatsUpdater) => {
@@ -63,11 +63,12 @@ export const Properties = ({ node }: { node: AppNode }) => {
 }
 
 const noteStateVariants = cva(
-    "bg-blue-600 bg-opacity-80 p-2 flex flex-col gap-2 items-center text-white", //tw
+    "bg-white border-2 text-blue-600 border-blue-600 bg-opacity-80 p-2 flex flex-col gap-2 items-center", //tw
     {
         variants: {
             state: {
                 idle: 'bg-opacity-80',
+                faded: 'opacity-20', //tw
                 waiting: 'bg-opacity-20',
                 running: 'bg-opacity-40',
                 completed: 'bg-opacity-80',
@@ -88,7 +89,7 @@ export function Node({ isConnectable, data }: AppNodeProp) {
     const state = (data.state || 'idle') as NodeState;
 
     return (
-        <Card className={cn(noteStateVariants({ state }))}>
+        <div className={cn(noteStateVariants({ state }))}>
             <ThreadTargetHandle active={isConnectable} type='multi' />
             <div className='flex gap-2'>
                 <NoteIcon state={state} idleIcon={Merge} className='rotate-180' />
@@ -96,6 +97,6 @@ export function Node({ isConnectable, data }: AppNodeProp) {
             </div>
             <DevMode data={data} />
             <ThreadSourceHandle active={isConnectable} />
-        </Card>
+        </div>
     );
 }

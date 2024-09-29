@@ -6,6 +6,7 @@ import { Background, BackgroundVariant, MarkerType, ReactFlow } from '@xyflow/re
 
 import '@xyflow/react/dist/style.css';
 import { useShallow } from 'zustand/shallow';
+import CustomEdge from '@/components/custom_edge';
 
 export default function Home() {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect } = useFlowStore(
@@ -27,6 +28,9 @@ export default function Home() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
+        edgeTypes={{
+          default: CustomEdge
+        }}
         defaultEdgeOptions={{
           markerEnd: {
             type: MarkerType.ArrowClosed,

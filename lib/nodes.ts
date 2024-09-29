@@ -15,11 +15,11 @@ const nodes = [
     DecisionNode
 ];
 
-export type NodeState = 'idle' | 'waiting' | 'running' | 'completed' | 'failed';
+export type NodeState = 'idle' | 'faded' | 'waiting' | 'running' | 'completed' | 'failed';
 
 export type AppContext = {
     [key: string]: {
-        [key: string] : string | number | object
+        [key: string] : string | number | object | undefined
     }
 }
 
@@ -30,6 +30,15 @@ export type StatsUpdater = {
     increaseAmount:(amount: number) => void;
 }
 
+export type NodeOutput = {
+    [key: string]: {
+        title: string
+        description?: string
+        value?: string | number 
+    }
+}
+
+export type NodeOutputs = ( node: AppNode, extra: object ) => NodeOutput
 export type NodeProcess = (context: AppContext, node: AppNode, nextNodes: AppNode[], statsUpdater: StatsUpdater) => Promise<AppNode[]>
 export type NodeOnDisconnect = (node: AppNode, otherNode: AppNode, updates: { [key: string]: unknown }) => Promise<void>
 
@@ -37,14 +46,16 @@ export type NodeMetaData = {
     type: NodeType;
     name: string;
     description: string;
+    tags: string[],
     notAddable?: boolean;
     OnDisconnect?: NodeOnDisconnect;
 }
 
-type NodeDetails = NodeMetaData & {
+export type NodeDetails = NodeMetaData & {
     node: typeof StartNode.Node;
     properties: typeof StartNode.Properties;
     process: NodeProcess;
+    outputs?: NodeOutputs;
 }
 
 export const nodeDetails: NodeDetails[] = nodes.map(x => ({
@@ -52,6 +63,7 @@ export const nodeDetails: NodeDetails[] = nodes.map(x => ({
     node: x.Node,
     properties: x.Properties,
     process: x.Process,
+    outputs: 'Outputs' in x ? x.Outputs as NodeOutputs : undefined
 }));
 
 export const nodeTypes = Object.fromEntries(nodeDetails.map(node => [node.type, node.node]));
