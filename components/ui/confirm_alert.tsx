@@ -1,6 +1,6 @@
 
-import { Button } from "./ui/button"
-import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog"
+import { Button } from "./button"
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./alert-dialog"
 
 type ConfirmAlertProps = {
     open: boolean,

@@ -8,9 +8,9 @@ import { Input } from '../ui/input';
 import { useMemo } from 'react';
 import { cva } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
-import NoteIcon from '../node_icon';
-import { ThreadSourceHandle, ThreadTargetHandle } from '../thread_handle';
-import DevMode from '../dev_mode';
+import NoteIcon from '../node_utils/node_icon';
+import { ThreadSourceHandle, ThreadTargetHandle } from '../node_utils/thread_handle';
+import DevMode from '../node_utils/dev_mode';
 
 export const Metadata: NodeMetaData = {
     type: 'thread_merge',

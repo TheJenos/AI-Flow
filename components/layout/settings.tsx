@@ -1,5 +1,5 @@
-import { Card } from "./ui/card";
-import { Toggle } from "./ui/toggle";
+import { Card } from "../ui/card";
+import { Toggle } from "../ui/toggle";
 import {
   Dialog,
   DialogTrigger,
@@ -9,14 +9,14 @@ import {
   DialogDescription,
   DialogFooter,
   DialogClose,
-} from "./ui/dialog";
-import { Label } from "./ui/label";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
+} from "../ui/dialog";
+import { Label } from "../ui/label";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
 import { Bolt, DollarSign, MoveDown, MoveUp, Timer } from "lucide-react";
 import { useRuntimeStore, useSettingStore } from "@/lib/store";
 import { useShallow } from "zustand/shallow";
-import { Switch } from "./ui/switch";
+import { Switch } from "../ui/switch";
 
 export default function Settings() {
     const { openAIKey, setOpenAIKey, isDevMode, setDevMode } = useSettingStore(useShallow(state => ({

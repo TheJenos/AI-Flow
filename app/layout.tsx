@@ -3,7 +3,7 @@
 import localFont from "next/font/local";
 import "./globals.css";
 import { ReactNode } from "react";
-import BaseLayout from "@/components/base_layout";
+import BaseLayout from "@/components/layout/base_layout";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",

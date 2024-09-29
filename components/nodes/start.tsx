@@ -7,12 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { set, cloneDeep } from 'lodash'
-import ConfirmAlert from '../confirm_alert';
 import { AppContext, NodeMetaData, NodeState, StatsUpdater, NodeOutput } from '@/lib/nodes';
 import { cva } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
-import { ThreadSourceHandle } from '../thread_handle';
-import DevMode from '../dev_mode';
+import { ThreadSourceHandle } from '../node_utils/thread_handle';
+import DevMode from '../node_utils/dev_mode';
+import ConfirmAlert from '../ui/confirm_alert';
 
 type Property = { name: string; type: string };
 

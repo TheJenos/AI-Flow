@@ -1,20 +1,21 @@
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Background, BackgroundVariant, getIncomers, MarkerType, NodeChange, NodeSelectionChange, ReactFlow, ReactFlowProvider } from "@xyflow/react";
 import CustomEdge from "./custom_edge";
 import { getNodeDetails, NodeDetails, NodeOutput, nodeTypes } from "@/lib/nodes";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AppNode, useFlowStore } from "@/lib/store";
 import { useShallow } from "zustand/shallow";
-import { Button } from "./ui/button";
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./ui/resizable";
+import { Button } from "../ui/button";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../ui/resizable";
 import { Plus } from "lucide-react";
 import { cn, trimStrings } from "@/lib/utils";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import { validateStatement } from "@/lib/logics";
 
 export default function ConditionEditorPopup({ baseNode, open, value, onChange, onClose }: { baseNode: AppNode, open: boolean, value?: string, onChange: (condition: string) => void, onClose: () => void }) {
     const [condition, setCondition] = useState<string>(value || '')
+    const textRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
       setCondition(value || '')
@@ -71,7 +72,15 @@ export default function ConditionEditorPopup({ baseNode, open, value, onChange, 
     }
 
     const addDynamicValue = (nodeId: string, key: string) => {
-        setCondition(x => x + `{${nodeId}.${key}}`)
+        const input = textRef.current
+        if (!input) return
+        setCondition(x => {
+            const textToInsert =  `{${nodeId}.${key}}`
+            const cursorPosition = input.selectionStart || x.length
+            const textBeforeCursorPosition = x.substring(0, cursorPosition)
+            const textAfterCursorPosition = x.substring(cursorPosition, x.length)
+            return `${textBeforeCursorPosition}${textToInsert}${textAfterCursorPosition}`
+        });
     }
 
     const isValidCondition = useMemo(() => validateStatement(condition),[condition])
@@ -160,7 +169,7 @@ export default function ConditionEditorPopup({ baseNode, open, value, onChange, 
                 <DialogFooter className="items-end">
                     <div className="w-full">
                         <Label>Condition {isValidCondition ? '(Valid)' : '(Invalid)'}</Label>
-                        <Input className={cn('mt-2', isValidCondition ? 'outline !outline-green-600': 'outline !outline-red-600')} value={condition} onChange={(e) => setCondition(e.target.value)} />
+                        <Input ref={textRef} className={cn('mt-2', isValidCondition ? 'outline !outline-green-600': 'outline !outline-red-600')} value={condition} onChange={(e) => setCondition(e.target.value)} />
                     </div>
                     <DialogClose asChild>
                         <Button disabled={!isValidCondition} onClick={() => isValidCondition ? onChange(condition) : null}>Set Condition</Button>

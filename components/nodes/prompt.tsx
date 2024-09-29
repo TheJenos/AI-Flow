@@ -1,5 +1,5 @@
 import { ScrollText } from 'lucide-react';
-import { AppContext, NodeMetaData, NodeOutput, NodeState, StatsUpdater } from '@/lib/nodes';
+import { AppContext, NodeMetaData, NodeOutput, NodeState, OutputExtra, StatsUpdater } from '@/lib/nodes';
 import { useFlowStore, AppNode, AppNodeProp } from '@/lib/store';
 import { cloneDeep, set } from 'lodash';
 import { Label } from '../ui/label';
@@ -9,9 +9,9 @@ import { Input } from '../ui/input';
 import { useMemo } from 'react';
 import { cva } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
-import NoteIcon from '../node_icon';
-import { ThreadSourceHandle, ThreadTargetHandle } from '../thread_handle';
-import DevMode from '../dev_mode';
+import NoteIcon from '../node_utils/node_icon';
+import { ThreadSourceHandle, ThreadTargetHandle } from '../node_utils/thread_handle';
+import DevMode from '../node_utils/dev_mode';
 
 export const Metadata: NodeMetaData = {
     type: 'prompt',
@@ -20,12 +20,17 @@ export const Metadata: NodeMetaData = {
     tags: ['OpenAI', 'ChatGPT', 'prompt']
 }
 
-export const Outputs = (node: AppNode) => {
+export const Outputs = (node: AppNode, extra: OutputExtra) => {
     return {
         name: {
             title: 'Node name',
             description: 'Node display name',
             value: node.data.name
+        },
+        count: {
+            title: 'Counter',
+            description: 'Counter get increase each run',
+            value: extra.count
         }
     } as NodeOutput
 }
@@ -35,8 +40,9 @@ export const Process = async (context: AppContext, node: AppNode, nextNodes: App
     await new Promise(resolve => setTimeout(resolve, randomVal));
     statsUpdater.log("prompt node", node.data.name, 'context', cloneDeep(context), 'node', node);
     statsUpdater.increaseInToken(randomVal)
-    context[node.id]['name'] = node.data.name || 'hi'
-    context[node.id]['count'] = (context[node.id]['count'] || 0) as number + 1
+    context[node.id] = Object.fromEntries(Object.entries(Outputs(node, {
+        count: (context[node.id]['count'] || 0) as number + 1
+    })).map(([key,value]) => [key, value.value]))
     return nextNodes
 }
 

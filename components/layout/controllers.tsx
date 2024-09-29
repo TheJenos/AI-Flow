@@ -1,6 +1,6 @@
-import NewNode from "./new_node";
-import { Card } from "./ui/card";
-import { Toggle } from "./ui/toggle";
+import NewNode from "../node_utils/new_node";
+import { Card } from "../ui/card";
+import { Toggle } from "../ui/toggle";
 import { PlayCircle, Scan, StopCircle } from "lucide-react";
 import { useShallow } from "zustand/shallow";
 import { AppContext, getNodeDetails, NodeState } from "@/lib/nodes";

@@ -8,14 +8,14 @@ import { Input } from '../ui/input';
 import { useMemo, useState } from 'react';
 import { cva } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
-import NoteIcon from '../node_icon';
-import { ThreadSourceHandle, ThreadTargetHandle } from '../thread_handle';
-import DevMode from '../dev_mode';
+import NoteIcon from '../node_utils/node_icon';
+import { ThreadSourceHandle, ThreadTargetHandle } from '../node_utils/thread_handle';
+import DevMode from '../node_utils/dev_mode';
 import { useShallow } from 'zustand/shallow';
 import { getOutgoers } from '@xyflow/react';
 import { runStatement } from '@/lib/logics';
 import { Button } from '../ui/button';
-import ConditionEditorPopup from '../condition_editor_popup';
+import ConditionEditorPopup from '../node_utils/condition_editor_popup';
 
 export const OnDisconnect = async (node: AppNode, otherNode: AppNode, updates: { [key: string]: unknown }) => {
     set(updates, `${node.id}.decisions`, Object.fromEntries(Object.entries(node.data.decisions as object).filter(([key]) => key != otherNode.id)))

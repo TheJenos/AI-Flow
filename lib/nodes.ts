@@ -17,6 +17,10 @@ const nodes = [
 
 export type NodeState = 'idle' | 'faded' | 'waiting' | 'running' | 'completed' | 'failed';
 
+export type OutputExtra =  {
+    [key: string] : string | number | object | undefined
+}
+
 export type AppContext = {
     [key: string]: {
         [key: string] : string | number | object | undefined
@@ -38,7 +42,7 @@ export type NodeOutput = {
     }
 }
 
-export type NodeOutputs = ( node: AppNode, extra: object ) => NodeOutput
+export type NodeOutputs = ( node: AppNode, extra: OutputExtra ) => NodeOutput
 export type NodeProcess = (context: AppContext, node: AppNode, nextNodes: AppNode[], statsUpdater: StatsUpdater) => Promise<AppNode[]>
 export type NodeOnDisconnect = (node: AppNode, otherNode: AppNode, updates: { [key: string]: unknown }) => Promise<void>
 

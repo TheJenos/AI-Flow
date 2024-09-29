@@ -1,10 +1,11 @@
 import { useFlowStore } from "@/lib/store";
-import Topbar from "./topbar";
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./ui/resizable";
 import { useEffect, useRef } from "react";
 import { ImperativePanelHandle } from "react-resizable-panels";
-import Properties from "./properties";
 import { ReactFlowProvider } from "@xyflow/react";
+import { ResizableHandle } from "../ui/resizable";
+import { ResizablePanel, ResizablePanelGroup } from "../ui/resizable";
+import Topbar from "./topbar";
+import Properties from "../node_utils/properties";
 
 export default function BaseLayout({ children }: { children: React.ReactNode }) {
     const isOnlyOneSelected = useFlowStore((state) => state.isOnlyOneSelected);

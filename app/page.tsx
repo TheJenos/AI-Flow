@@ -6,7 +6,7 @@ import { Background, BackgroundVariant, MarkerType, ReactFlow } from '@xyflow/re
 
 import '@xyflow/react/dist/style.css';
 import { useShallow } from 'zustand/shallow';
-import CustomEdge from '@/components/custom_edge';
+import CustomEdge from '@/components/node_utils/custom_edge';
 
 export default function Home() {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect } = useFlowStore(

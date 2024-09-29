@@ -1,6 +1,6 @@
 import { Plus } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { Toggle } from "./ui/toggle";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Toggle } from "../ui/toggle";
 import { useEffect, useState } from "react";
 import { useFlowStore } from "@/lib/store";
 import { nodeDetails } from "@/lib/nodes";
