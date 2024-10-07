@@ -14,17 +14,26 @@ import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Bolt, DollarSign, MoveDown, MoveUp, Timer } from "lucide-react";
-import { useRuntimeStore, useSettingStore } from "@/lib/store";
+import { DevMode, useRuntimeStore, useSettingStore } from "@/lib/store";
 import { useShallow } from "zustand/shallow";
 import { Switch } from "../ui/switch";
+import { useState } from "react";
+
+const devModeInputs = {
+    testOpenAPI: "Use Test OpenAI API",
+    showTreads: "Show Tread Names",
+    showPropData: "Show Prop Data"
+}
 
 export default function Settings() {
-    const { openAIKey, setOpenAIKey, isDevMode, setDevMode } = useSettingStore(useShallow(state => ({
+    const { openAIKey, setOpenAIKey, devMode, setDevMode } = useSettingStore(useShallow(state => ({
         openAIKey: state.openAIKey,
         setOpenAIKey: state.setOpenAIKey,
-        isDevMode: state.isDevMode,
+        devMode: state.devMode,
         setDevMode: state.setDevMode
     })))
+
+    const [isDevMode, toggleDevMode] = useState<boolean>(!!devMode)
 
     const { duration, inToken, outToken, amount } = useRuntimeStore(useShallow((state) => ({
         duration: state.duration,
@@ -37,7 +46,12 @@ export default function Settings() {
         e.preventDefault();
         const formData = new FormData(e.target as HTMLFormElement);
         setOpenAIKey(formData.get('apiKey') as string);
-        setDevMode(!!(formData.get('devMode') as string));
+
+        const payload = Object.keys(devModeInputs).map(x => [x, !!formData.get(x)])
+        const anyTrue = isDevMode && payload.some(x => x[1])
+
+        setDevMode(anyTrue ? Object.fromEntries(payload) : undefined);
+        toggleDevMode(anyTrue)
     }
 
     return (
@@ -62,7 +76,7 @@ export default function Settings() {
                     <DialogHeader>
                         <DialogTitle>Settings</DialogTitle>
                         <DialogDescription>
-                            Global settings (None of these will be saved on the server)
+                            Global settings (None of these will be saved on servers)
                         </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleSubmit}>
@@ -84,7 +98,23 @@ export default function Settings() {
                                 name="devMode"
                                 className="col-span-5"
                                 defaultChecked={isDevMode}
+                                onClick={() => toggleDevMode(s => !s)}
                             />
+                            {isDevMode ? <>
+                                {Object.entries(devModeInputs).map(([key,value])=> (
+                                    <>
+                                        <Label htmlFor={key} className="text-right col-span-3 col-start-2">
+                                            {value}
+                                        </Label>
+                                        <Switch
+                                            id={key}
+                                            name={key}
+                                            className="col-span-3"
+                                            defaultChecked={devMode && devMode[key as keyof DevMode]}
+                                        />
+                                    </>
+                                ))}
+                            </> : null}
                         </div>
                         <DialogFooter>
                             <DialogClose asChild>

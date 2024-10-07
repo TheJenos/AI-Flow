@@ -16,9 +16,9 @@ export type AppNodeProp = NodeProps & {
     data: NodeData
 }
 
-export type AppNode = Node & {
+export type AppNode<T = NodeData> = Node & {
     type: NodeType
-    data: NodeData
+    data: T
 };
 
 export type AppState = {
@@ -27,6 +27,7 @@ export type AppState = {
     onNodesChange: OnNodesChange<AppNode>;
     onEdgesChange: OnEdgesChange;
     onConnect: OnConnect;
+    pushNode: (node: AppNode) => void;
     setNodes: (nodes: AppNode[]) => void;
     setEdges: (edges: Edge[]) => void;
     updateNode: (updatedNode: AppNode) => void;
@@ -53,18 +54,24 @@ export type RuntimeState = {
     setAmount: (amount: number) => void;
 };
 
+export type DevMode = {
+    testOpenAPI: boolean;
+    showTreads: boolean;
+    showPropData: boolean;
+}
+
 export type SettingsState = {
     openAIKey: string;
-    isDevMode: boolean;
+    devMode?: DevMode;
     setOpenAIKey: (key: string) => void;
-    setDevMode: (mode: boolean) => void;
+    setDevMode: (value?: DevMode) => void;
 };
 
 export const useSettingStore = create<SettingsState>()(persist(set => ({
     openAIKey: '',
-    isDevMode: false,
+    devMode: undefined,
     setOpenAIKey: key => set({ openAIKey: key }),
-    setDevMode: mode => set({ isDevMode: mode }),
+    setDevMode: value => set({ devMode: value  }),
 }), {
     name: 'flow-setting-store',
     storage: createJSONStorage(() => localStorage)
@@ -225,6 +232,7 @@ export const useFlowStore = create<AppState>()(persist(computed((set, get) => ({
             nodes: nodes.map(node => node.id in updates ? { ...node, data: { ...node.data, ...updates[node.id] } } : node)
         });
     },
+    pushNode: node => set((s) => ({ nodes: [...s.nodes, node] })),
     setNodes: nodes => set({ nodes }),
     setEdges: edges => set({ edges }),
     updateNode: updatedNode => set({

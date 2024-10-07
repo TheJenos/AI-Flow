@@ -4,7 +4,7 @@ import { AppContext } from "./nodes";
 const valueReg = new RegExp('\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}', 'gm')
 
 const filterStatement = (statement: string) => {
-    return statement.replaceAll(' = '," == ")
+    return statement.replaceAll(/(?<![<>!])=(?!=)/g, "==").replaceAll('===', '==');
 }
 
 export const replaceDynamicValueWithActual = (statement: string, context: AppContext, forFunction = false) => {
@@ -37,7 +37,6 @@ export const runStatement = (statement: string, context: AppContext) => {
 
 export const validateStatement = (statement: string = '') => {
     const logic = `return ${replaceDynamicValueWithDummyValues(statement)}`
-    console.log(logic);
     try {
         new Function(logic)()
         return true

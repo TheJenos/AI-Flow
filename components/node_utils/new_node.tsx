@@ -9,9 +9,8 @@ import { useShallow } from "zustand/shallow";
 export default function NewNode() {
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState('');
-    const { nodes, setNodes } = useFlowStore(useShallow((state) => ({
-        nodes:state.nodes,
-        setNodes:state.setNodes
+    const { pushNode } = useFlowStore(useShallow((state) => ({
+        pushNode:state.pushNode
     })))
 
     useEffect(() => {
@@ -27,7 +26,7 @@ export default function NewNode() {
 
     const handleNodeClick = (node: typeof nodeDetails[number]) => {
         setOpen(false);
-        setNodes([...nodes, {
+        pushNode({
             id: `${node.type}_${Math.random().toString(16).slice(2)}`,
             type: node.type,
             position: { x: 0, y: 0 },
@@ -35,7 +34,7 @@ export default function NewNode() {
                 state: 'idle',
                 thread: Math.random().toString(16).slice(2),
             }
-        }]);
+        });
     }
 
     return (

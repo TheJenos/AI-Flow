@@ -6,7 +6,7 @@ import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
-import { set, cloneDeep } from 'lodash'
+import { set, cloneDeep, snakeCase } from 'lodash'
 import { AppContext, NodeMetaData, NodeState, StatsUpdater, NodeOutput } from '@/lib/nodes';
 import { cva } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
@@ -26,12 +26,14 @@ export const Metadata: NodeMetaData = {
 
 export const Outputs = (node: AppNode) => {
     const outputs = {} as NodeOutput
+    const props = node.data.properties as Property[]
     const propValue = node.data.propertyValues as { [key: string]: string }
 
-    for (const key in propValue) {
-        outputs[key] = {
-            title: key,
-            value: propValue[key]
+    for (const prop of props) {
+        if (!propValue[prop.name]) continue
+        outputs[snakeCase(prop.name)] = {
+            title: prop.name,
+            value: propValue[prop.name]
         }
     }
 
@@ -178,12 +180,12 @@ const noteStateVariants = cva(
     {
         variants: {
             state: {
-                idle: 'bg-opacity-80',
+                idle: '',
                 faded: 'opacity-20', //tw
-                waiting: 'bg-opacity-20',
-                running: 'bg-opacity-40',
-                completed: 'bg-opacity-80',
-                failed: 'bg-opacity-80',
+                waiting: 'opacity-20',
+                running: 'opacity-40',
+                completed: 'opacity-100',
+                failed: 'opacity-20 outline outline-red-500', //tw
             }
         },
         defaultVariants: {

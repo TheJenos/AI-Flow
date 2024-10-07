@@ -141,7 +141,7 @@ export const Properties = ({ node }: { node: AppNode }) => {
 
                         {get(node, `data.decisions.${oNode.id}.type`) == 'else' ?
                             (<div className='mt-2'>
-                                <Button className='w-full' onClick={() => clearElse(oNode.id)}>Remove else condition</Button>
+                                <Button className='w-full' onClick={() => clearElse(oNode.id)}>Unset else condition</Button>
                             </div>)
                             :
                             (<>
@@ -167,12 +167,12 @@ export const Properties = ({ node }: { node: AppNode }) => {
                                             nodeId: oNode.id,
                                             condition: get(node, `data.decisions.${oNode.id}.condition`, '')
                                         })}>
-                                            <PenBox />
+                                            <PenBox size={16} />
                                         </Button>
                                     </div>
                                 </div>
                             </>)}
-                        {!alreadyHaveElse && (!get(node, `data.decisions.${oNode.id}.name`) && !get(node, `data.decisions.${oNode.id}.condition`)) ? <Button className='mt-2' variant={'ghost'} onClick={() => markAsElse(oNode.id)}>Add else condition</Button> : null}
+                        {!alreadyHaveElse && (!get(node, `data.decisions.${oNode.id}.name`) && !get(node, `data.decisions.${oNode.id}.condition`)) ? <Button className='mt-2' variant={'ghost'} onClick={() => markAsElse(oNode.id)}>Set else condition</Button> : null}
                     </Card>
                 ))
             )}
@@ -186,12 +186,12 @@ const noteStateVariants = cva(
     {
         variants: {
             state: {
-                idle: 'bg-opacity-80',
+                idle: '',
                 faded: 'opacity-20', //tw
-                waiting: 'bg-opacity-20',
-                running: 'bg-opacity-40',
-                completed: 'bg-opacity-80',
-                failed: 'bg-opacity-80',
+                waiting: 'opacity-20',
+                running: 'opacity-40',
+                completed: 'opacity-100',
+                failed: 'opacity-20 outline outline-red-500', //tw
             }
         },
         defaultVariants: {

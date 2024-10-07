@@ -4,7 +4,7 @@ import { useMemo } from "react";
 
 export default function Properties() {
     const selectedNode = useFlowStore((state) => state.selectedNode)
-    const isDevMode = useSettingStore(state => state.isDevMode)
+    const isDevMode = useSettingStore(state => state.devMode)
 
     const nodeDetails = useMemo(() => {
         return selectedNode ? getNodeDetails(selectedNode.type) : null;
@@ -22,7 +22,7 @@ export default function Properties() {
     }
 
     return (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col h-screen">
             <div className="border-b border-gray-200 p-2">
                 <h2 className="text-lg font-bold">{nodeDetails?.name}</h2>
                 <p className="text-sm text-gray-500">{nodeDetails?.description}</p>
@@ -31,13 +31,15 @@ export default function Properties() {
                         <span className="font-semibold">Node ID : </span>
                         <p className="text-gray-500">{selectedNode.id}</p>
                     </div>
-                    {isDevMode ? <div className="flex flex-col gap-2 text-xs">
+                    {isDevMode?.showPropData ? <div className="flex flex-col gap-2 text-xs">
                         <span className="font-semibold">Data : </span>
                         <p className="text-gray-500 whitespace-pre">{JSON.stringify(selectedNode.data, null, 4)}</p>
                     </div> : null } 
                 </div>
             </div>
-            {PropertiesComponent && <PropertiesComponent node={selectedNode} />}
+            <div className="flex-1 overflow-y-auto py-3">
+                {PropertiesComponent && <PropertiesComponent node={selectedNode} />}
+            </div>
         </div>
     )
 }
