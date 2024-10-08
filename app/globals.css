@@ -67,6 +67,22 @@
   }
 }
 
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+}
+ 
+::-webkit-scrollbar-thumb {
+  background: #888; 
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555; 
+}
+
 .RichEditor-root h1 {
   @apply text-4xl font-bold mb-4;
 }
@@ -94,7 +110,6 @@
 .RichEditor-root p {
   @apply text-base mb-4;
 }
-
 
 .RichEditor-root {
   @apply bg-white border border-gray-300 text-sm;

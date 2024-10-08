@@ -1,6 +1,6 @@
 import { Plus, ScrollText, Trash } from 'lucide-react';
-import { AppContext, NodeMetaData, NodeOutput, NodeState, OutputExtra, StatsUpdater } from '@/lib/nodes';
-import { useFlowStore, AppNode, AppNodeProp, NodeData } from '@/lib/store';
+import { AppContext, NodeMetaData, NodeOutput, NodeState, OutputExtra, Controller } from '@/lib/nodes';
+import { useFlowStore, AppNode, AppNodeProp, NodeData, useSettingStore } from '@/lib/store';
 import { cloneDeep, set } from 'lodash';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
@@ -14,11 +14,12 @@ import { ThreadSourceHandle, ThreadTargetHandle } from '../node_utils/thread_han
 import DevMode from '../node_utils/dev_mode';
 import { Button } from '../ui/button';
 import ConfirmAlert from '../ui/confirm_alert';
+import { Message, modelDetails, OpenAi, OpenAiFaker, openAiTokenToCost } from '@/lib/openai';
 
 type PromptData = NodeData & {
     model: string,
     system_prompt: string
-    prompts: { type: 'user' | 'assistant', prompt?: string }[]
+    prompts: Message[]
 }
 
 export const Metadata: NodeMetaData = {
@@ -28,29 +29,67 @@ export const Metadata: NodeMetaData = {
     tags: ['OpenAI', 'ChatGPT', 'prompt']
 }
 
-export const Outputs = (node: AppNode, extra: OutputExtra) => {
+export const Outputs = (node: AppNode<PromptData>, extra: OutputExtra) => {
     return {
         name: {
             title: 'Node name',
-            description: 'Node display name',
+            description: 'Name used in the node',
             value: node.data.name
         },
-        count: {
-            title: 'Counter',
-            description: 'Counter get increase each run',
-            value: extra.count
-        }
+        model_name: {
+            title: 'Model Name',
+            description: 'Model used in the node',
+            value: node.data.model
+        },
+        system_promp: {
+            title: 'System Prompt',
+            description: 'Syetem prompt used in the node',
+            value: node.data.system_prompt
+        },
+        assistant_output: {
+            title: 'Assistant Output',
+            description: 'Assistant output that getting from the reponse',
+            value: extra.assistant_output
+        },
     } as NodeOutput
 }
 
-export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[], statsUpdater: StatsUpdater) => {
-    const randomVal = Math.floor(Math.random() * 5000)
-    await new Promise(resolve => setTimeout(resolve, randomVal));
-    statsUpdater.log("prompt node", node.data.name, 'context', cloneDeep(context), 'node', node);
-    statsUpdater.increaseInToken(randomVal)
+export const Process = async (context: AppContext, node: AppNode<PromptData>, nextNodes: AppNode[], controller: Controller) => {
+    const token = useSettingStore.getState().openAIKey
+    const isTestAPI = useSettingStore.getState().devMode?.testOpenAPI || false
+    if (!isTestAPI && !token) throw Error("You need to add OpenAI Token in the setting to continue or you can use test api on dev mode for testing")
+
+    const model = node.data.model
+    if (!model) throw Error("Model type is requried")
+
+    const systemPrompt = node.data.system_prompt
+    if (!systemPrompt) throw Error("System prompt is requried")
+
+    const client = isTestAPI ? OpenAiFaker() : OpenAi(token)
+
+    const otherPrompts = node.data.prompts
+
+    const messages = [
+        {
+            role: 'system',
+            content: systemPrompt
+        },
+        ...otherPrompts
+    ] as Message[]
+
+    const response = await client.chat({
+        model,
+        messages
+    })
+
+    controller.increaseOutToken(response.data.usage.prompt_tokens)
+    controller.increaseInToken(response.data.usage.completion_tokens)
+    controller.increaseAmount(openAiTokenToCost(response.data.usage.total_tokens, model))
+
     context[node.id] = Object.fromEntries(Object.entries(Outputs(node, {
-        count: (context[node.id]['count'] || 0) as number + 1
+        assistant_output: response.data.choices[0].message.content
     })).map(([key, value]) => [key, value.value]))
+
     return nextNodes
 }
 
@@ -60,7 +99,6 @@ export const Properties = ({ node }: { node: AppNode<PromptData> }) => {
     const [deletePrompt, setDeletePrompt] = useState<number>();
     const [prompts, setPrompts] = useState(node.data.prompts || []);
 
-
     const setValue = (key: string, value: string) => {
         const clonedNode = cloneDeep(node);
         set(clonedNode, `data.${key}`, value);
@@ -69,10 +107,10 @@ export const Properties = ({ node }: { node: AppNode<PromptData> }) => {
 
     const setPromptValue = (index: number, value: string) => {
         const clonePrompts = cloneDeep(prompts);
-        clonePrompts[index].prompt = value
+        clonePrompts[index].content = value
         setPrompts(clonePrompts)
         const clonedNode = cloneDeep(node);
-        set(clonedNode, `data.prompts.${index}.prompt`, value);
+        set(clonedNode, `data.prompts.${index}.content`, value);
         updateNode(clonedNode);
     }
 
@@ -80,7 +118,7 @@ export const Properties = ({ node }: { node: AppNode<PromptData> }) => {
         e.preventDefault();
         const formData = new FormData(e.target as HTMLFormElement);
         const newProperty = {
-            type: formData.get('type') as 'user' | 'assistant'
+            role: formData.get('type') as 'user' | 'assistant'
         };
         setPrompts([...prompts, newProperty]);
         const clonedNode = cloneDeep(node);
@@ -91,7 +129,7 @@ export const Properties = ({ node }: { node: AppNode<PromptData> }) => {
     };
 
     const handleDelete = (promptIndex?: number, force: boolean = false) => {
-        if (!force && promptIndex != undefined && prompts[promptIndex].prompt) {
+        if (!force && promptIndex != undefined && prompts[promptIndex].content) {
             setDeletePrompt(promptIndex);
             return;
         }
@@ -121,12 +159,10 @@ export const Properties = ({ node }: { node: AppNode<PromptData> }) => {
                     <SelectTrigger>
                         <SelectValue id="model" placeholder="Select a model" />
                     </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
-                        <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                        <SelectItem value="gpt-4o-mini">GPT-4o-Mini</SelectItem>
-                        <SelectItem value="gpt-4">GPT-4</SelectItem>
-                        <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
+                    <SelectContent>                       
+                        {modelDetails.map((x,index) => (
+                            <SelectItem key={index} value={x.title}>{x.name}</SelectItem>
+                        ))}
                     </SelectContent>
                 </Select>
             </div>
@@ -144,7 +180,7 @@ export const Properties = ({ node }: { node: AppNode<PromptData> }) => {
             {prompts.map((prompt,index) => (
                 <div key={index} className='flex flex-col gap-1'>
                     <div className='flex'>
-                        <Label className='text-sm font-semibold' htmlFor="system_prompt">{prompt.type == 'user' ? "User" : "Assistant"} Prompt</Label>
+                        <Label className='text-sm font-semibold' htmlFor="system_prompt">{prompt.role == 'user' ? "User" : "Assistant"} Prompt</Label>
                         <Button
                             variant="ghost"
                             size="sm"
@@ -157,7 +193,7 @@ export const Properties = ({ node }: { node: AppNode<PromptData> }) => {
                     <Textarea
                         id="prompt"
                         name="prompt"
-                        value={prompt.prompt}
+                        value={prompt.content}
                         className='h-20'
                         placeholder='Enter your prompt here...'
                         onChange={(e) => setPromptValue(index, e.target.value)}
@@ -207,7 +243,7 @@ const noteStateVariants = cva(
                 waiting: 'opacity-20',
                 running: 'opacity-40',
                 completed: 'opacity-100',
-                failed: 'opacity-20 outline outline-red-500', //tw
+                failed: 'opacity-80 outline outline-offset-1 outline-red-500', //tw
             }
         },
         defaultVariants: {

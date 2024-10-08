@@ -37,18 +37,17 @@ export type AppState = {
 export type RuntimeState = {
     isRunning: boolean;
     logs: string[];
-    duration: number;
+    startTime?: number,
+    endTime?: number,
     inToken: number;
     outToken: number;
     amount: number;
     start: () => void;
     stop: () => void;
     log: (...logData:unknown[]) => void;
-    increaseDuration: (amount?: number) => void;
     increaseInToken: (amount: number) => void;
     increaseOutToken: (amount: number) => void;
     increaseAmount:(amount: number) => void;
-    setDuration: (duration: number) => void;
     setInToken: (inToken: number) => void;
     setOutToken: (outToken: number) => void;
     setAmount: (amount: number) => void;
@@ -80,18 +79,18 @@ export const useSettingStore = create<SettingsState>()(persist(set => ({
 export const useRuntimeStore = create<RuntimeState>()(set => ({
     isRunning: false,
     logs: [],
+    startTime: undefined,
+    endTime: undefined,
     duration: 0,
     inToken: 0,
     outToken: 0,
     amount: 0,
-    start: () => set({ isRunning: true, duration: 0, inToken: 0, outToken: 0, amount: 0 }),
-    stop: () => set({ isRunning: false }),
+    start: () => set({ isRunning: true, startTime: new Date().getTime(), endTime: undefined, inToken: 0, outToken: 0, amount: 0 }),
+    stop: () => set({ isRunning: false, endTime: new Date().getTime()}),
     log: (...logData) => set((state) => ({ logs: [...state.logs, ...logData.map(x => JSON.stringify(x))] })),
-    increaseDuration: (amount = 1) => set((state) => ({ duration: state.duration + amount })),
     increaseInToken: (amount) => set((state) => ({ inToken: state.inToken + amount })),
     increaseOutToken: (amount) => set((state) => ({ outToken: state.outToken + amount })),
     increaseAmount: (amount) => set((state) => ({ amount: state.amount + amount })),
-    setDuration: (duration) => set({ duration }),
     setInToken: (inToken) => set({ inToken }),
     setOutToken: (outToken) => set({ outToken }),
     setAmount: (amount) => set({ amount }),

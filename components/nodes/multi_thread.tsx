@@ -1,5 +1,5 @@
 import { Split } from 'lucide-react';
-import { AppContext, NodeMetaData, NodeState, StatsUpdater } from '@/lib/nodes';
+import { AppContext, NodeMetaData, NodeState, Controller } from '@/lib/nodes';
 import { useFlowStore, AppNode, AppNodeProp } from '@/lib/store';
 import { cloneDeep, set } from 'lodash';
 import { Label } from '../ui/label';
@@ -18,8 +18,8 @@ export const Metadata: NodeMetaData = {
     tags: ['promise', 'async']
 }
 
-export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[], statsUpdater: StatsUpdater) => {
-    statsUpdater.log("multi_thread node", 'context', context, 'node', node);
+export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[], controller: Controller) => {
+    controller.log("multi_thread node", 'context', context, 'node', node);
     context[node.id]['name'] = node.data.name || 'hi'
     return nextNodes
 }

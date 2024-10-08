@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { set, cloneDeep, snakeCase } from 'lodash'
-import { AppContext, NodeMetaData, NodeState, StatsUpdater, NodeOutput } from '@/lib/nodes';
+import { AppContext, NodeMetaData, NodeState, Controller, NodeOutput } from '@/lib/nodes';
 import { cva } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 import { ThreadSourceHandle } from '../node_utils/thread_handle';
@@ -26,8 +26,8 @@ export const Metadata: NodeMetaData = {
 
 export const Outputs = (node: AppNode) => {
     const outputs = {} as NodeOutput
-    const props = node.data.properties as Property[]
-    const propValue = node.data.propertyValues as { [key: string]: string }
+    const props = node.data.properties as Property[] || []
+    const propValue = node.data.propertyValues as { [key: string]: string } || {}
 
     for (const prop of props) {
         if (!propValue[prop.name]) continue
@@ -40,8 +40,8 @@ export const Outputs = (node: AppNode) => {
     return outputs;
 }
 
-export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[], statsUpdater: StatsUpdater) => {
-    statsUpdater.log("start node", 'context', context, 'node', node);
+export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[], controller: Controller) => {
+    controller.log("start node", 'context', context, 'node', node);
     context[node.id] = Object.fromEntries(Object.entries(Outputs(node)).map(([key,value]) => [key, value.value]))
     return nextNodes
 }

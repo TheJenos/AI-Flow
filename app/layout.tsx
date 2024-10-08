@@ -4,6 +4,8 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { ReactNode } from "react";
 import BaseLayout from "@/components/layout/base_layout";
+import { Toast, ToastProvider } from "@/components/ui/toast";
+import { Toaster } from "@/components/ui/toaster";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -35,6 +37,7 @@ export default function RootLayout({
           <BaseLayout>
             {children}
           </BaseLayout>
+          <Toaster />
       </body>
     </html>
   );

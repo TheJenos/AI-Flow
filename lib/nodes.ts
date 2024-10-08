@@ -3,16 +3,18 @@ import * as PromptNode from "@/components/nodes/prompt";
 import * as MultiTreadNode from "@/components/nodes/multi_thread";
 import * as TreadMergeNode from "@/components/nodes/thread_merge";
 import * as DecisionNode from "@/components/nodes/decision";
+import * as ConsoleLogNode from "@/components/nodes/console_log";
 import { AppNode } from "./store";
 
-export type NodeType = 'start' | 'prompt' | 'multi_thread' | 'thread_merge' | 'decision'
+export type NodeType = 'start' | 'prompt' | 'multi_thread' | 'thread_merge' | 'decision' | 'console_log'
 
 const nodes = [
     StartNode,
     PromptNode,
     MultiTreadNode,
     TreadMergeNode,
-    DecisionNode
+    DecisionNode,
+    ConsoleLogNode
 ];
 
 export type NodeState = 'idle' | 'faded' | 'waiting' | 'running' | 'completed' | 'failed';
@@ -27,7 +29,7 @@ export type AppContext = {
     }
 }
 
-export type StatsUpdater = {
+export type Controller = {
     log: (...logs:unknown[]) => void;
     increaseInToken: (amount: number) => void;
     increaseOutToken: (amount: number) => void;
@@ -43,7 +45,7 @@ export type NodeOutput = {
 }
 
 export type NodeOutputs = ( node: AppNode, extra: OutputExtra ) => NodeOutput
-export type NodeProcess = (context: AppContext, node: AppNode, nextNodes: AppNode[], statsUpdater: StatsUpdater) => Promise<AppNode[]>
+export type NodeProcess = (context: AppContext, node: AppNode, nextNodes: AppNode[], Controller: Controller) => Promise<AppNode[]>
 export type NodeOnDisconnect = (node: AppNode, otherNode: AppNode, updates: { [key: string]: unknown }) => Promise<void>
 
 export type NodeMetaData = {
@@ -68,7 +70,7 @@ export const nodeDetails: NodeDetails[] = nodes.map(x => ({
     properties: x.Properties,
     process: x.Process,
     outputs: 'Outputs' in x ? x.Outputs as NodeOutputs : undefined
-}));
+} as NodeDetails));
 
 export const nodeTypes = Object.fromEntries(nodeDetails.map(node => [node.type, node.node]));
 

@@ -1,6 +1,6 @@
 import { CircleHelp, PenBox } from 'lucide-react';
 import { Card } from '../ui/card';
-import { AppContext, getNodeDetails, NodeMetaData, NodeState, StatsUpdater } from '@/lib/nodes';
+import { AppContext, getNodeDetails, NodeMetaData, NodeState, Controller } from '@/lib/nodes';
 import { useFlowStore, AppNode, AppNodeProp } from '@/lib/store';
 import { cloneDeep, get, set } from 'lodash';
 import { Label } from '../ui/label';
@@ -29,8 +29,8 @@ export const Metadata: NodeMetaData = {
     OnDisconnect,
 }
 
-export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[], statsUpdater: StatsUpdater) => {
-    statsUpdater.log("decision node", 'context', context, 'node', node);
+export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[], controller: Controller) => {
+    controller.log("decision node", 'context', context, 'node', node);
 
     const allDecisions = (node.data.decisions || {}) as {
         [key: string]: {

@@ -1,6 +1,6 @@
 import { getIncomers } from '@xyflow/react';
 import { Merge } from 'lucide-react';
-import { AppContext, NodeMetaData, NodeState, StatsUpdater } from '@/lib/nodes';
+import { AppContext, NodeMetaData, NodeState, Controller } from '@/lib/nodes';
 import { useFlowStore, AppNode, AppNodeProp } from '@/lib/store';
 import { cloneDeep, set } from 'lodash';
 import { Label } from '../ui/label';
@@ -19,7 +19,7 @@ export const Metadata: NodeMetaData = {
     tags: ['await', 'sync']
 }
 
-export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[], statsUpdater: StatsUpdater) => {
+export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[], controller: Controller) => {
     await new Promise((resolve) => {
         const WaitTillAllEnd = () => {
             const { nodes, edges } = useFlowStore.getState()
@@ -33,7 +33,7 @@ export const Process = async (context: AppContext, node: AppNode, nextNodes: App
         }
         WaitTillAllEnd()
     })
-    statsUpdater.log("merge_thread node", 'context', context, 'node', node);
+    controller.log("merge_thread node", 'context', context, 'node', node);
     context[node.id]['name'] = node.data.name || 'hi'
     return nextNodes
 }
