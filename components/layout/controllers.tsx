@@ -3,12 +3,13 @@ import { Card } from "../ui/card";
 import { Toggle } from "../ui/toggle";
 import { PlayCircle, Scan, StopCircle } from "lucide-react";
 import { useShallow } from "zustand/shallow";
-import { AppContext, getNodeDetails, nodeDetails, NodeState } from "@/lib/nodes";
+import { AppContext, getNodeDetails, NodeState } from "@/lib/nodes";
 import { getOutgoers, useReactFlow } from "@xyflow/react";
 import { cloneDeep, set } from "lodash";
 import { AppNode, useFlowStore, useRuntimeStore } from "@/lib/store";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import UndoRedo from "../node_utils/undo_redo";
 
 export default function Controllers() {
   const { toast } = useToast()
@@ -16,7 +17,7 @@ export default function Controllers() {
     nodes: s.nodes,
     edges: s.edges,
     updateNode: s.updateNode
-  })));
+  })))
 
   const { isRunning, start, stop, increaseInToken, increaseOutToken, increaseAmount} = useRuntimeStore(useShallow(s => ({
     isRunning: s.isRunning,
@@ -110,6 +111,7 @@ export default function Controllers() {
 
   return (
     <Card className="absolute top-2 left-1/2 -translate-x-1/2 p-1 flex gap-1 z-50">
+      <UndoRedo/>
       <NewNode />
       <Toggle onClick={() => reactFlow.fitView({
         padding: 0.3

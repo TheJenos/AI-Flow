@@ -1,5 +1,5 @@
 import { Captions } from 'lucide-react';
-import { AppContext, NodeMetaData, NodeOutput, NodeState, OutputExtra, Controller } from '@/lib/nodes';
+import { AppContext, NodeMetaData, NodeOutput, NodeState } from '@/lib/nodes';
 import { useFlowStore, AppNode, AppNodeProp, NodeData } from '@/lib/store';
 import { cloneDeep, set } from 'lodash';
 import { Label } from '../ui/label';
@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 import NoteIcon from '../node_utils/node_icon';
 import { ThreadSourceHandle, ThreadTargetHandle } from '../node_utils/thread_handle';
 import DevMode from '../node_utils/dev_mode';
-import { runStatement } from '@/lib/logics';
+import { replaceDynamicValueWithActual } from '@/lib/logics';
 
 type ConsoleLogData = NodeData & {
     log: string
@@ -24,7 +24,7 @@ export const Metadata: NodeMetaData = {
     tags: ['debug', 'log', 'console']
 }
 
-export const Outputs = (node: AppNode<ConsoleLogData>, extra: OutputExtra) => {
+export const Outputs = (node: AppNode<ConsoleLogData>) => {
     return {
         name: {
             title: 'Node name',
@@ -39,8 +39,8 @@ export const Outputs = (node: AppNode<ConsoleLogData>, extra: OutputExtra) => {
     } as NodeOutput
 }
 
-export const Process = async (context: AppContext, node: AppNode<ConsoleLogData>, nextNodes: AppNode[], controller: Controller) => {
-    console.log(runStatement(node.data.log, context));
+export const Process = async (context: AppContext, node: AppNode<ConsoleLogData>, nextNodes: AppNode[]) => {
+    console.log(`Log:${node.id} `, replaceDynamicValueWithActual(node.data.log, context));
     return nextNodes
 }
 

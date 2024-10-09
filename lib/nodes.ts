@@ -5,6 +5,7 @@ import * as TreadMergeNode from "@/components/nodes/thread_merge";
 import * as DecisionNode from "@/components/nodes/decision";
 import * as ConsoleLogNode from "@/components/nodes/console_log";
 import { AppNode } from "./store";
+import Decimal from "decimal.js-light";
 
 export type NodeType = 'start' | 'prompt' | 'multi_thread' | 'thread_merge' | 'decision' | 'console_log'
 
@@ -33,7 +34,7 @@ export type Controller = {
     log: (...logs:unknown[]) => void;
     increaseInToken: (amount: number) => void;
     increaseOutToken: (amount: number) => void;
-    increaseAmount:(amount: number) => void;
+    increaseAmount:(amount: Decimal) => void;
 }
 
 export type NodeOutput = {

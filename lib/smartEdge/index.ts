@@ -131,8 +131,7 @@ export const getSmartEdge = <NodeDataType = unknown>({
 		)
 
 		return { svgPathString, edgeCenterX, edgeCenterY }
-	} catch (e) {
-		console.log(e);
+	} catch {
 		return null
 	}
 }

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useFlowStore } from "@/lib/store";
 import { nodeDetails } from "@/lib/nodes";
 import { useShallow } from "zustand/shallow";
+import { useReactFlow } from "@xyflow/react";
 
 export default function NewNode() {
     const [open, setOpen] = useState(false);
@@ -13,6 +14,8 @@ export default function NewNode() {
         pushNode:state.pushNode
     })))
 
+    const { screenToFlowPosition } = useReactFlow()
+ 
     useEffect(() => {
         if (open) {
             setSearch('');
@@ -26,10 +29,15 @@ export default function NewNode() {
 
     const handleNodeClick = (node: typeof nodeDetails[number]) => {
         setOpen(false);
+
+        const reactFlowDiv = document.querySelector(".react-flow")
+        if (!reactFlowDiv) return
+        const center = screenToFlowPosition({x: reactFlowDiv.clientWidth / 2, y: reactFlowDiv.clientHeight / 2})
+
         pushNode({
             id: `${node.type}_${Math.random().toString(16).slice(2)}`,
             type: node.type,
-            position: { x: 0, y: 0 },
+            position: center,
             data: {
                 state: 'idle',
                 thread: Math.random().toString(16).slice(2),
@@ -52,7 +60,7 @@ export default function NewNode() {
                     onChange={(e) => setSearch(e.target.value)}
                     className="h-8 text-sm px-2 w-full outline-none bg-transparent"
                 />
-                <div className="flex flex-col bg-white rounded-b-md border-t-2 border-accent h-44 overflow-y-auto">
+                <div className="flex flex-col bg-white rounded-b-md border-t-2 border-accent h-44 overflow-y-auto select-none">
                     {filteredNodes.length > 0 ? (
                         filteredNodes.map((node, index) => {
                             const Node = node.node;

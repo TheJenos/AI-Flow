@@ -17,7 +17,7 @@ import { Bolt, DollarSign, MoveDown, MoveUp, Timer } from "lucide-react";
 import { DevMode, useRuntimeStore, useSettingStore } from "@/lib/store";
 import { useShallow } from "zustand/shallow";
 import { Switch } from "../ui/switch";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 const devModeInputs = {
     testOpenAPI: "Use Test OpenAI API",
@@ -41,7 +41,7 @@ export default function Settings() {
         endTime: state.endTime,
         inToken: state.inToken,
         outToken: state.outToken,
-        amount: state.amount,
+        amount: String(state.amount.toFixed(6)).padStart(7, '0'),
     })))
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -56,7 +56,7 @@ export default function Settings() {
         toggleDevMode(anyTrue)
     }
 
-    const conveterDuration = (start?: number, end?: number) => {
+    const coveterDuration = (start?: number, end?: number) => {
         if (!start) return `00:00.000`
         const duration = (end ?? Date.now()) - start;
         const minutes = Math.floor(duration / 60000);
@@ -67,17 +67,17 @@ export default function Settings() {
 
     useEffect(() => {
         if (!startTime || endTime) {
-            setDuration(conveterDuration(startTime, endTime))
+            setDuration(coveterDuration(startTime, endTime))
             return
         }
 
-        const interval = setInterval(() => setDuration(conveterDuration(startTime)), 10);
+        const interval = setInterval(() => setDuration(coveterDuration(startTime)), 10);
         return () => clearInterval(interval);
     }, [startTime, endTime]);
 
     return (
-        <Card className="absolute top-2 right-2 p-1 flex gap-1 z-50">
-            <div className="flex gap-2 items-center text-xs mr-3">
+        <Card className="absolute top-2 right-2 p-1 flex gap-2 z-50">
+            <div className="flex gap-2 items-center text-xs">
                 <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-1"><MoveUp size={16}/>{inToken}</div>
                     <div className="flex items-center gap-1"><MoveDown size={16}/>{outToken}</ div>

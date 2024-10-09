@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from 'axios'
+import Decimal from 'decimal.js-light'
 
 export const modelDetails = [
     {
@@ -142,7 +143,7 @@ export type ChatCompletion = {
     choices: {
         index: number;
         message: Message;
-        logprobs: null | any;
+        logprobs: null | unknown;
         finish_reason: string;
     }[];
     usage: {
@@ -155,13 +156,13 @@ export type ChatCompletion = {
     };
 };
 
-export function openAiTokenToCost(tokenCount: number, model: string): number {
-    return tokenCount * (modelDetails.find(x => x.title == model)?.tokenPrice || 0) / 1000;
+export function openAiTokenToCost(tokenCount: number, model: string): Decimal {
+    return (new Decimal(modelDetails.find(x => x.title == model)?.tokenPrice || 0)).mul(tokenCount).div(1000) ;
 }
 
 export function OpenAiFaker() {
     return {
-        chat: (payload: ChatPayload) => new Promise<AxiosResponse<ChatCompletion>>((resolve, reject) => {
+        chat: (payload: ChatPayload) => new Promise<AxiosResponse<ChatCompletion>>((resolve) => {
             setTimeout(() => {
                 resolve({
                     data: {

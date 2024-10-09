@@ -15,6 +15,7 @@ import DevMode from '../node_utils/dev_mode';
 import { Button } from '../ui/button';
 import ConfirmAlert from '../ui/confirm_alert';
 import { Message, modelDetails, OpenAi, OpenAiFaker, openAiTokenToCost } from '@/lib/openai';
+import { replaceDynamicValueWithActual } from '@/lib/logics';
 
 type PromptData = NodeData & {
     model: string,
@@ -41,9 +42,9 @@ export const Outputs = (node: AppNode<PromptData>, extra: OutputExtra) => {
             description: 'Model used in the node',
             value: node.data.model
         },
-        system_promp: {
+        system_prompt: {
             title: 'System Prompt',
-            description: 'Syetem prompt used in the node',
+            description: 'System prompt used in the node',
             value: node.data.system_prompt
         },
         assistant_output: {
@@ -79,7 +80,10 @@ export const Process = async (context: AppContext, node: AppNode<PromptData>, ne
 
     const response = await client.chat({
         model,
-        messages
+        messages: messages.map(x => {
+            x.content = replaceDynamicValueWithActual(x.content || '', context)
+            return x
+        })
     })
 
     controller.increaseOutToken(response.data.usage.prompt_tokens)

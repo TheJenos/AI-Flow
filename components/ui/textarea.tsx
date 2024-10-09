@@ -12,7 +12,7 @@ export type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>
 const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, ...props }, ref) => {
     const [value, setValue] = useState(props.value as string)
-
+    
     return (
       <div className="relative">
         <textarea
@@ -23,7 +23,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           ref={ref}
           {...props}
         />
-        <div className="absolute top-1 right-4">
+        <div className="absolute bottom-1 right-4">
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="ghost" className="h-6 w-6" size="icon">

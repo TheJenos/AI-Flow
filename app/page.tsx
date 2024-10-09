@@ -7,6 +7,7 @@ import { Background, BackgroundVariant, MarkerType, ReactFlow } from '@xyflow/re
 import '@xyflow/react/dist/style.css';
 import { useShallow } from 'zustand/shallow';
 import CustomEdge from '@/components/node_utils/custom_edge';
+import Clipboard from '@/components/node_utils/clipboard';
 
 export default function Home() {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect } = useFlowStore(
@@ -50,6 +51,7 @@ export default function Home() {
         maxZoom={1.5}
         >
         <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
+        <Clipboard/>
       </ReactFlow>
     </div>
   );

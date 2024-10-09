@@ -1,9 +1,12 @@
-import { create } from 'zustand';
+import { create, useStore } from 'zustand';
 import { addEdge, applyNodeChanges, applyEdgeChanges, getOutgoers, NodeProps } from '@xyflow/react';
 import { createComputed } from "zustand-computed";
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Edge, Node, OnNodesChange, OnEdgesChange, OnConnect } from '@xyflow/react';
 import { getNodeDetails, NodeState, NodeType } from './nodes';
+import Decimal from 'decimal.js-light';
+import { temporal, TemporalState } from 'zundo';
+import { debounce } from 'lodash';
 
 export type NodeData = {
     state: NodeState
@@ -47,7 +50,7 @@ export type RuntimeState = {
     log: (...logData:unknown[]) => void;
     increaseInToken: (amount: number) => void;
     increaseOutToken: (amount: number) => void;
-    increaseAmount:(amount: number) => void;
+    increaseAmount:(amount: Decimal) => void;
     setInToken: (inToken: number) => void;
     setOutToken: (outToken: number) => void;
     setAmount: (amount: number) => void;
@@ -90,7 +93,7 @@ export const useRuntimeStore = create<RuntimeState>()(set => ({
     log: (...logData) => set((state) => ({ logs: [...state.logs, ...logData.map(x => JSON.stringify(x))] })),
     increaseInToken: (amount) => set((state) => ({ inToken: state.inToken + amount })),
     increaseOutToken: (amount) => set((state) => ({ outToken: state.outToken + amount })),
-    increaseAmount: (amount) => set((state) => ({ amount: state.amount + amount })),
+    increaseAmount: (amount) => set((state) => ({ amount: new Decimal(state.amount).add(amount).toNumber() })),
     setInToken: (inToken) => set({ inToken }),
     setOutToken: (outToken) => set({ outToken }),
     setAmount: (amount) => set({ amount }),
@@ -152,7 +155,11 @@ const computed = createComputed((state: AppState) => ({
     selectedNode: state.nodes.find(node => node.selected)
 }));
 
-export const useFlowStore = create<AppState>()(persist(computed((set, get) => ({
+export const useTemporalFlowStore = <T,>(
+    selector: (state: TemporalState<Partial<AppState>>) => T,
+) => useStore(useFlowStore.temporal, selector);
+
+export const useFlowStore = create<AppState>()(temporal(persist(computed((set, get) => ({
     nodes: initialNodes,
     edges: initialEdges,
     onNodesChange: changes => {
@@ -244,4 +251,11 @@ export const useFlowStore = create<AppState>()(persist(computed((set, get) => ({
     name: 'flow-store',
     storage: createJSONStorage(() => localStorage),
     partialize: (state) => Object.fromEntries(Object.entries(state).filter(([key]) => !['isOnlyOneSelected', 'selectedNode'].includes(key)))
+}),{
+    limit: 20,
+    handleSet: (handleSet) => debounce(handleSet, 1000, {
+        leading: true,
+        trailing: false,
+    }),
+    partialize: ({nodes, edges}) => ({nodes, edges}) as AppState
 }));

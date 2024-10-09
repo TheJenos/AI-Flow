@@ -91,12 +91,12 @@ export const Properties = ({ node }: { node: AppNode }) => {
         updateDecisionEdge(clonedNode, nodeId);
     }
 
-    const outgoners = useMemo(() => getOutgoers(node, nodes, edges).map(x => ({
+    const outgoers = useMemo(() => getOutgoers(node, nodes, edges).map(x => ({
         oNode: x,
         oNodeDetails: getNodeDetails(x.type)
     })), [node, nodes, edges])
 
-    const alreadyHaveElse = useMemo(() => outgoners.some(({ oNode }) => get(node, `data.decisions.${oNode.id}.type`) == 'else'), [node, outgoners])
+    const alreadyHaveElse = useMemo(() => outgoers.some(({ oNode }) => get(node, `data.decisions.${oNode.id}.type`) == 'else'), [node, outgoers])
 
     const markAsElse = (nodeId: string) => {
         const clonedNode = cloneDeep(node);
@@ -132,10 +132,10 @@ export const Properties = ({ node }: { node: AppNode }) => {
                 />
             </div>
             <Label>Decisions</Label>
-            {outgoners.length === 0 ? (
+            {outgoers.length === 0 ? (
                 <div className="text-sm text-gray-500">No connections to Decisions block.</div>
             ) : (
-                outgoners.map(({ oNode, oNodeDetails }, index) => (
+                outgoers.map(({ oNode, oNodeDetails }, index) => (
                     <Card key={index} className="flex flex-col pb-2 p-3 border-b border-gray-200">
                         <span className='text-sm font-semibold'>{oNode.data.name ? `${oNode.data.name} (${oNodeDetails.name})` : `${oNodeDetails.name} (${oNode.id})`}</span>
 

@@ -38,7 +38,7 @@ export default function Properties() {
                 </div>
             </div>
             <div className="flex-1 overflow-y-auto py-3">
-                {PropertiesComponent && <PropertiesComponent node={selectedNode} />}
+                {PropertiesComponent && <PropertiesComponent key={selectedNode.id} node={selectedNode} />}
             </div>
         </div>
     )
