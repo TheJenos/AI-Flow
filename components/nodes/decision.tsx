@@ -30,7 +30,6 @@ export const Metadata: NodeMetaData = {
 }
 
 export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[], controller: Controller) => {
-    controller.log("decision node", 'context', context, 'node', node);
 
     const allDecisions = (node.data.decisions || {}) as {
         [key: string]: {

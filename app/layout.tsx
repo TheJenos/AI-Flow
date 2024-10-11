@@ -4,7 +4,6 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { ReactNode } from "react";
 import BaseLayout from "@/components/layout/base_layout";
-import { Toast, ToastProvider } from "@/components/ui/toast";
 import { Toaster } from "@/components/ui/toaster";
 
 const geistSans = localFont({
@@ -26,8 +25,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <title>AI Flow | LLM Flow tester</title>
+        <title>AI Flow | LLM Flow Tester</title>
         <meta name="description" content="A simple LLM flow tester" />
+        <meta name="keywords" content="AI, LLM, flow, tester, machine learning, artificial intelligence, OPENAI, CHATGPT" />
+        <meta name="author" content="Thanura Nadun Ranasinghe" />
+        <meta property="og:title" content="AI Flow | LLM Flow Tester" />
+        <meta property="og:description" content="A simple LLM flow tester" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://aiflow.netlify.com" />
+        <meta property="og:image" content="/logo.svg" />
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body

@@ -24,6 +24,14 @@ export type AppNode<T = NodeData> = Node & {
     data: T
 };
 
+export type NodeLogs<T = unknown> = {
+    id: string
+    type: 'success' | 'error' | 'warning'
+    title: string
+    nodeType: NodeType
+    payload?: T
+}
+
 export type AppState = {
     nodes: AppNode[];
     edges: Edge[];
@@ -39,7 +47,7 @@ export type AppState = {
 
 export type RuntimeState = {
     isRunning: boolean;
-    logs: string[];
+    logs: NodeLogs[];
     startTime?: number,
     endTime?: number,
     inToken: number;
@@ -47,7 +55,7 @@ export type RuntimeState = {
     amount: number;
     start: () => void;
     stop: () => void;
-    log: (...logData:unknown[]) => void;
+    log: (payload:NodeLogs) => void;
     increaseInToken: (amount: number) => void;
     increaseOutToken: (amount: number) => void;
     increaseAmount:(amount: Decimal) => void;
@@ -88,9 +96,9 @@ export const useRuntimeStore = create<RuntimeState>()(set => ({
     inToken: 0,
     outToken: 0,
     amount: 0,
-    start: () => set({ isRunning: true, startTime: new Date().getTime(), endTime: undefined, inToken: 0, outToken: 0, amount: 0 }),
+    start: () => set({ isRunning: true, startTime: new Date().getTime(), endTime: undefined, inToken: 0, outToken: 0, amount: 0, logs: [] }),
     stop: () => set({ isRunning: false, endTime: new Date().getTime()}),
-    log: (...logData) => set((state) => ({ logs: [...state.logs, ...logData.map(x => JSON.stringify(x))] })),
+    log: (payload) => set((state) => ({ logs: [...state.logs, payload] })),
     increaseInToken: (amount) => set((state) => ({ inToken: state.inToken + amount })),
     increaseOutToken: (amount) => set((state) => ({ outToken: state.outToken + amount })),
     increaseAmount: (amount) => set((state) => ({ amount: new Decimal(state.amount).add(amount).toNumber() })),

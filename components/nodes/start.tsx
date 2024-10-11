@@ -41,8 +41,15 @@ export const Outputs = (node: AppNode) => {
 }
 
 export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[], controller: Controller) => {
-    controller.log("start node", 'context', context, 'node', node);
-    context[node.id] = Object.fromEntries(Object.entries(Outputs(node)).map(([key,value]) => [key, value.value]))
+    const payload = Object.fromEntries(Object.entries(Outputs(node)).map(([key,value]) => [key, value.value]))
+    context[node.id] = payload
+    controller.log({
+        id: node.id,
+        type: 'success',
+        title: "Initial values has been added to the context",
+        nodeType: node.type,
+        payload
+    });
     return nextNodes
 }
 

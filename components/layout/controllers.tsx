@@ -3,7 +3,7 @@ import { Card } from "../ui/card";
 import { Toggle } from "../ui/toggle";
 import { PlayCircle, Scan, StopCircle } from "lucide-react";
 import { useShallow } from "zustand/shallow";
-import { AppContext, getNodeDetails, NodeState } from "@/lib/nodes";
+import { AppContext, Controller, getNodeDetails, NodeState } from "@/lib/nodes";
 import { getOutgoers, useReactFlow } from "@xyflow/react";
 import { cloneDeep, set } from "lodash";
 import { AppNode, useFlowStore, useRuntimeStore } from "@/lib/store";
@@ -19,7 +19,7 @@ export default function Controllers() {
     updateNode: s.updateNode
   })))
 
-  const { isRunning, start, stop, increaseInToken, increaseOutToken, increaseAmount} = useRuntimeStore(useShallow(s => ({
+  const { isRunning, start, stop, log, increaseInToken, increaseOutToken, increaseAmount} = useRuntimeStore(useShallow(s => ({
     isRunning: s.isRunning,
     start: s.start,
     stop: s.stop,
@@ -53,11 +53,11 @@ export default function Controllers() {
     if (!startNode) return;
     start();
     const controller = {
-      log: console.log,
+      log,
       increaseInToken,
       increaseOutToken,
       increaseAmount
-    }
+    } as Controller
 
     const processNode = async (node: AppNode): Promise<void> => {
       const isRunning = useRuntimeStore.getState().isRunning;

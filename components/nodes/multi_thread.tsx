@@ -19,7 +19,6 @@ export const Metadata: NodeMetaData = {
 }
 
 export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[], controller: Controller) => {
-    controller.log("multi_thread node", 'context', context, 'node', node);
     context[node.id]['name'] = node.data.name || 'hi'
     return nextNodes
 }
