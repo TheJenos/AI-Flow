@@ -1,6 +1,6 @@
 "use client";
 
-import { nodeTypes } from '@/lib/nodes';
+import { nodeMap } from '@/lib/nodes';
 import { useFlowStore, useTemporalFlowStore } from '@/lib/store';
 import { Background, BackgroundVariant, MarkerType, ReactFlow } from '@xyflow/react';
 
@@ -25,12 +25,14 @@ export default function Home() {
     <div className='bg-white absolute inset-0 h-full w-full'>
       <FlowContextMenu>
         <ReactFlow
+          tabIndex={0}
+          className='outline-none !bg-gray-100'
           nodes={nodes}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          nodeTypes={nodeTypes}
+          nodeTypes={nodeMap}
           edgeTypes={{
             default: CustomEdge
           }}

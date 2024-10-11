@@ -3,6 +3,7 @@ import { AppNode, useFlowStore, useTemporalFlowStore } from "@/lib/store";
 import { Edge, useReactFlow } from "@xyflow/react";
 import { PropsWithChildren, useCallback, useEffect } from "react";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuShortcut, ContextMenuTrigger } from "../ui/context-menu";
+import { Clipboard, Copy, Redo, Scissors, Undo } from "lucide-react";
 
 type ClipboardData = {
     node: AppNode[],
@@ -22,6 +23,8 @@ export default function FlowContextMenu({ children }: PropsWithChildren) {
         const selectedEdge = edges.filter(x => x.selected && x.source != 'start' && x.target != 'start')
         const selectedNodeIds = selectedNode.map(x => x.id)
 
+        if (selectedNode.length == 0 && selectedEdge.length == 0) return
+
         setNodes(nodes.filter(x => !x.selected || x.id == 'start'))
         setEdges(edges.filter(x => !selectedNodeIds.includes(x.source) && !selectedNodeIds.includes(x.target)))
 
@@ -36,6 +39,8 @@ export default function FlowContextMenu({ children }: PropsWithChildren) {
 
         const selectedNode = nodes.filter(x => x.selected && x.id != 'start')
         const selectedEdge = edges.filter(x => x.selected && x.source != 'start' && x.target != 'start')
+
+        if (selectedNode.length == 0 && selectedEdge.length == 0) return
 
         navigator.clipboard.writeText(JSON.stringify({
             node: selectedNode,
@@ -109,14 +114,11 @@ export default function FlowContextMenu({ children }: PropsWithChildren) {
         }
     }, [screenToFlowPosition, toast])
 
-
     useEffect(() => {
-        function keyPressHandler(e: KeyboardEvent) {
-            const element = e.target as HTMLElement
-            if (element.tagName == "INPUT" || element.tagName == "TEXTAREA") return
-            if (element.classList.contains('public-DraftEditor-content')) return
-            e.preventDefault()
+        const reactFlowDiv = document.querySelector('.react-flow') as HTMLInputElement
+        if (!reactFlowDiv) return
 
+        function keyPressHandler(e: KeyboardEvent) {
             if ((e.ctrlKey || e.metaKey) && e.key == 'x') {
                 cut()
             }
@@ -130,9 +132,9 @@ export default function FlowContextMenu({ children }: PropsWithChildren) {
             }
         }
 
-        window.addEventListener('keydown', keyPressHandler);
+        reactFlowDiv.addEventListener('keydown', keyPressHandler);
 
-        return () => window.removeEventListener('keydown', keyPressHandler)
+        return () => reactFlowDiv.removeEventListener('keydown', keyPressHandler)
     }, [copy, cut, past])
 
     return (
@@ -140,25 +142,25 @@ export default function FlowContextMenu({ children }: PropsWithChildren) {
             <ContextMenuTrigger>
                 {children}
             </ContextMenuTrigger>
-            <ContextMenuContent>
+            <ContextMenuContent className="w-40">
                 <ContextMenuItem disabled={pastStates.length == 0} onClick={() => undo()}>
-                    Undo
+                    <Undo size={16} className="mr-2" /> Undo
                     <ContextMenuShortcut>⌘ + Z</ContextMenuShortcut>
                 </ContextMenuItem>
                 <ContextMenuItem disabled={futureStates.length == 0} onClick={() => redo()}>
-                    Redo
+                    <Redo size={16} className="mr-2" /> Redo
                     <ContextMenuShortcut>⌘ + Y</ContextMenuShortcut>
                 </ContextMenuItem>
                 <ContextMenuItem disabled={!selectedNodeFromStore} onClick={cut}>
-                    Cut
+                    <Scissors size={16} className="mr-2" /> Cut
                     <ContextMenuShortcut>⌘ + X</ContextMenuShortcut>
                 </ContextMenuItem>
                 <ContextMenuItem disabled={!selectedNodeFromStore} onClick={copy}>
-                    Copy
+                    <Copy size={16} className="mr-2" /> Copy
                     <ContextMenuShortcut>⌘ + C</ContextMenuShortcut>
                 </ContextMenuItem>
                 <ContextMenuItem onClick={past}>
-                    Pasts
+                    <Clipboard size={16} className="mr-2" /> Paste
                     <ContextMenuShortcut>⌘ + V</ContextMenuShortcut>
                 </ContextMenuItem>
             </ContextMenuContent>

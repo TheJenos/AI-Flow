@@ -5,7 +5,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export const trimStrings = (text: string, maxLength: number = 15) => {
+export const trimStrings = (text?: string, maxLength: number = 15) => {
+  if (!text) return '';
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength) + '...';
 }

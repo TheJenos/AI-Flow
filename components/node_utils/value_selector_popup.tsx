@@ -1,26 +1,16 @@
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Background, BackgroundVariant, getIncomers, MarkerType, NodeChange, NodeSelectionChange, ReactFlow, ReactFlowProvider } from "@xyflow/react";
 import CustomEdge from "./custom_edge";
 import { getNodeDetails, NodeDetails, NodeOutput, nodeMap } from "@/lib/nodes";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { AppNode, useFlowStore } from "@/lib/store";
 import { useShallow } from "zustand/shallow";
 import { Button } from "../ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../ui/resizable";
 import { Plus } from "lucide-react";
-import { cn, trimStrings } from "@/lib/utils";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { validateStatement } from "@/lib/logics";
+import { trimStrings } from "@/lib/utils";
 
-export default function ConditionEditorPopup({ baseNode, open, value, onChange, onClose }: { baseNode: AppNode, open: boolean, value?: string, onChange: (condition: string) => void, onClose: () => void }) {
-    const [condition, setCondition] = useState<string>(value || '')
-    const textRef = useRef<HTMLInputElement>(null)
-
-    useEffect(() => {
-      setCondition(value || '')
-    }, [value])
-
+export default function ValueSelectorPopup({ baseNode, open, onSelect, onClose }: { baseNode: AppNode, open: boolean, onSelect: (condition: string) => void, onClose: () => void }) {
     const [selectedNode, setSelectedNode] = useState<{
         node: AppNode;
         nodeDetails: NodeDetails;
@@ -47,7 +37,7 @@ export default function ConditionEditorPopup({ baseNode, open, value, onChange, 
         return {
             nodes: oldNodes.filter(x => captureNodeIds.includes(x.id)).map(x => ({
                 ...x,
-                selectable: !!getNodeDetails(x.type).outputs,
+                selectable: baseNode.id != x.id && !!getNodeDetails(x.type).outputs,
             })),
             edges: oldEdges.filter(x => captureNodeIds.includes(x.source) && captureNodeIds.includes(x.target))
         }
@@ -59,6 +49,7 @@ export default function ConditionEditorPopup({ baseNode, open, value, onChange, 
         const selectedChange = changes.find(x => x.type == 'select' && (x as NodeSelectionChange).selected == true) as NodeSelectionChange | undefined
 
         if (selectedChange) {
+            if (selectedChange.id == baseNode.id) return;
             const node = nodes.find(x => x.id == selectedChange.id) as AppNode
             const nodeDetails = getNodeDetails(node?.type)
             if (nodeDetails.outputs) {
@@ -68,26 +59,12 @@ export default function ConditionEditorPopup({ baseNode, open, value, onChange, 
         }
     }
 
-    const addDynamicValue = (nodeId: string, key: string) => {
-        const input = textRef.current
-        if (!input) return
-        setCondition(x => {
-            const textToInsert =  `{${nodeId}.${key}}`
-            const cursorPosition = input.selectionStart || x.length
-            const textBeforeCursorPosition = x.substring(0, cursorPosition)
-            const textAfterCursorPosition = x.substring(cursorPosition, x.length)
-            return `${textBeforeCursorPosition}${textToInsert}${textAfterCursorPosition}`
-        });
-    }
-
-    const isValidCondition = useMemo(() => validateStatement(condition),[condition])
-
     return (
         <Dialog open={open} onOpenChange={(state) => !state && onClose && onClose() }>
             <DialogContent className="max-w-screen-md">
                 <DialogHeader>
-                    <DialogTitle>Condition builder</DialogTitle>
-                    <DialogDescription>Build conditions for node transitions</DialogDescription>
+                    <DialogTitle>Value Selector</DialogTitle>
+                    <DialogDescription>Select a dynamic value to insert into your template.</DialogDescription>
                 </DialogHeader>
                 <ResizablePanelGroup className="border" direction="horizontal">
                     <ResizablePanel defaultSize={60}>
@@ -152,7 +129,7 @@ export default function ConditionEditorPopup({ baseNode, open, value, onChange, 
                                                     {selectedNode.outputs[x].description ? <p className="text-xs text-gray-500">{selectedNode.outputs[x].description}</p> : null}
                                                     {selectedNode.outputs[x].value ? <p className="text-xs text-gray-500">Current : {trimStrings(selectedNode.outputs[x].value.toString())}</p> : null}
                                                 </div>
-                                                <Button size="icon" variant="ghost" onClick={() => addDynamicValue(selectedNode.node.id,x)} ><Plus /></Button>
+                                                <Button size="icon" variant="ghost" onClick={() => onSelect(`{${selectedNode.node.id}.${x}}`)} ><Plus /></Button>
                                             </div>
                                         ))}
                                     </div>
@@ -163,15 +140,6 @@ export default function ConditionEditorPopup({ baseNode, open, value, onChange, 
                         </div>
                     </ResizablePanel>
                 </ResizablePanelGroup>
-                <DialogFooter className="items-end">
-                    <div className="w-full">
-                        <Label>Condition {isValidCondition ? '(Valid)' : '(Invalid)'}</Label>
-                        <Input ref={textRef} className={cn('mt-2', isValidCondition ? 'outline !outline-green-600': 'outline !outline-red-600')} value={condition} onChange={(e) => setCondition(e.target.value)} />
-                    </div>
-                    <DialogClose asChild>
-                        <Button disabled={!isValidCondition} onClick={() => isValidCondition ? onChange(condition) : null}>Set Condition</Button>
-                    </DialogClose>
-                </DialogFooter>
             </DialogContent>
         </Dialog>
     )

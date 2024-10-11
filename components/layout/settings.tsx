@@ -1,5 +1,4 @@
 import { Card } from "../ui/card";
-import { Toggle } from "../ui/toggle";
 import {
   Dialog,
   DialogTrigger,
@@ -51,9 +50,9 @@ export default function Settings() {
         <Card className="absolute top-2 right-2 p-1 flex gap-2 z-50">
             <Dialog>
                 <DialogTrigger>
-                    <Toggle>
+                    <Button size="icon" variant="ghost">
                         <Bolt size={20} />
-                    </Toggle>
+                    </Button>
                 </DialogTrigger>
                 <DialogContent>
                     <DialogHeader>
@@ -83,9 +82,9 @@ export default function Settings() {
                                 defaultChecked={isDevMode}
                                 onClick={() => toggleDevMode(s => !s)}
                             />
-                            {isDevMode ? <>
+                            {isDevMode ? <div className="col-start-3 col-span-6 flex flex-col gap-2">
                                 {Object.entries(devModeInputs).map(([key,value])=> (
-                                    <>
+                                    <div className="flex gap-4 items-center" key={key}>
                                         <Label htmlFor={key} className="text-right col-span-3 col-start-2">
                                             {value}
                                         </Label>
@@ -95,9 +94,9 @@ export default function Settings() {
                                             className="col-span-3"
                                             defaultChecked={devMode && devMode[key as keyof DevMode]}
                                         />
-                                    </>
+                                    </div>
                                 ))}
-                            </> : null}
+                            </div> : null}
                         </div>
                         <DialogFooter>
                             <DialogClose asChild>

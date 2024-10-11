@@ -7,7 +7,7 @@ import * as ConsoleLogNode from "@/components/nodes/console_log";
 import { AppNode, NodeLogs } from "./store";
 import Decimal from "decimal.js-light";
 
-export type NodeType = 'start' | 'prompt' | 'multi_thread' | 'thread_merge' | 'decision' | 'console_log'
+export type NodeType = "start" | "prompt" | "multi_thread" | "thread_merge" | "decision" | "console_log"
 
 const nodes = [
     StartNode,
@@ -45,12 +45,12 @@ export type NodeOutput = {
     }
 }
 
-export type NodeOutputViewProps<T = unknown> = {
+export type NodeLogViewProps<T = unknown> = {
     node?: AppNode;
     payload: T
 }
 
-export type NodeOutputView = (props: NodeOutputViewProps) => JSX.Element
+export type NodeLogView = (props: NodeLogViewProps) => JSX.Element
 export type NodeOutputs = ( node: AppNode, extra: OutputExtra ) => NodeOutput
 export type NodeProcess = (context: AppContext, node: AppNode, nextNodes: AppNode[], Controller: Controller) => Promise<AppNode[]>
 export type NodeOnDisconnect = (node: AppNode, otherNode: AppNode, updates: { [key: string]: unknown }) => Promise<void>
@@ -69,19 +69,21 @@ export type NodeDetails = NodeMetaData & {
     properties: typeof StartNode.Properties;
     process: NodeProcess;
     outputs?: NodeOutputs;
-    outputView?: NodeOutputView;
+    logView?: NodeLogView;
 }
 
+export const nodeMetaDetails = nodes.map(x => x.Metadata);
+
 export const nodeDetails: NodeDetails[] = nodes.map(x => ({
-    ...x.Metadata,
+    ...(x.Metadata as unknown as NodeMetaData),
     node: x.Node,
     properties: x.Properties,
     process: x.Process,
     outputs: 'Outputs' in x ? x.Outputs as NodeOutputs : undefined,
-    outputView: 'OutputView' in x ? x.OutputView as NodeOutputView : undefined
+    logView: 'LogView' in x ? x.LogView as NodeLogView : undefined
 } as NodeDetails));
 
-export const nodeTypes = Object.fromEntries(nodeDetails.map(node => [node.type, node.node]));
+export const nodeMap = Object.fromEntries(nodeDetails.map(node => [node.type, node.node]));
 
 export const getNodeDetails = (type: NodeType) => {
     const node = nodeDetails.find(node => node.type === type);

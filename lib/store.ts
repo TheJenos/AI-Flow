@@ -7,9 +7,9 @@ import { getNodeDetails, NodeState, NodeType } from './nodes';
 import Decimal from 'decimal.js-light';
 import { temporal, TemporalState } from 'zundo';
 import { debounce } from 'lodash';
+import { deepEqual } from 'fast-equals';
 
 export type NodeData = {
-    state: NodeState
     thread: string
     name?: string
     parentId?: string
@@ -26,7 +26,7 @@ export type AppNode<T = NodeData> = Node & {
 
 export type NodeLogs<T = unknown> = {
     id: string
-    type: 'success' | 'error' | 'warning'
+    type: 'info' | 'success' | 'error' | 'warning'
     title: string
     nodeType: NodeType
     payload?: T
@@ -47,6 +47,9 @@ export type AppState = {
 
 export type RuntimeState = {
     isRunning: boolean;
+    nodeStates: {
+        [key: string]: NodeState
+    }
     logs: NodeLogs[];
     startTime?: number,
     endTime?: number,
@@ -56,6 +59,8 @@ export type RuntimeState = {
     start: () => void;
     stop: () => void;
     log: (payload:NodeLogs) => void;
+    setNodeState: (nodeStates: { [key: string]: NodeState }) => void;
+    setNodeStateFromNodeId: (nodeId:string, state: NodeState) => void;
     increaseInToken: (amount: number) => void;
     increaseOutToken: (amount: number) => void;
     increaseAmount:(amount: Decimal) => void;
@@ -89,6 +94,7 @@ export const useSettingStore = create<SettingsState>()(persist(set => ({
 
 export const useRuntimeStore = create<RuntimeState>()(set => ({
     isRunning: false,
+    nodeStates: {},
     logs: [],
     startTime: undefined,
     endTime: undefined,
@@ -99,13 +105,14 @@ export const useRuntimeStore = create<RuntimeState>()(set => ({
     start: () => set({ isRunning: true, startTime: new Date().getTime(), endTime: undefined, inToken: 0, outToken: 0, amount: 0, logs: [] }),
     stop: () => set({ isRunning: false, endTime: new Date().getTime()}),
     log: (payload) => set((state) => ({ logs: [...state.logs, payload] })),
+    setNodeState: (nodeStates) => set({ nodeStates }),
+    setNodeStateFromNodeId: (nodeId, nodeState) => set((state) => ({ nodeStates: {...state.nodeStates, [nodeId]: nodeState} })),
     increaseInToken: (amount) => set((state) => ({ inToken: state.inToken + amount })),
     increaseOutToken: (amount) => set((state) => ({ outToken: state.outToken + amount })),
     increaseAmount: (amount) => set((state) => ({ amount: new Decimal(state.amount).add(amount).toNumber() })),
     setInToken: (inToken) => set({ inToken }),
     setOutToken: (outToken) => set({ outToken }),
     setAmount: (amount) => set({ amount }),
-
 }));
 
 const processOnDisconnect = (
@@ -261,6 +268,7 @@ export const useFlowStore = create<AppState>()(temporal(persist(computed((set, g
     partialize: (state) => Object.fromEntries(Object.entries(state).filter(([key]) => !['isOnlyOneSelected', 'selectedNode'].includes(key)))
 }),{
     limit: 20,
+    equality: deepEqual,
     handleSet: (handleSet) => debounce(handleSet, 1000, {
         leading: true,
         trailing: false,

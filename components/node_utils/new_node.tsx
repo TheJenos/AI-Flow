@@ -39,7 +39,6 @@ export default function NewNode() {
             type: node.type,
             position: center,
             data: {
-                state: 'idle',
                 thread: Math.random().toString(16).slice(2),
             }
         });

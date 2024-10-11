@@ -1,18 +1,34 @@
-import { forwardRef, useState } from "react"
+import { forwardRef, useEffect, useState } from "react"
 
 import { cn } from "@/lib/utils"
-import { PenBox } from "lucide-react"
+import { PenBox, Route } from "lucide-react"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTrigger } from "./dialog"
 import { DialogTitle } from "@radix-ui/react-dialog"
 import { Button } from "./button"
 import RichTextEditor from "./rich_text_editor"
+import { AppNode } from "@/lib/store"
+import ValueSelectorPopup from "../node_utils/value_selector_popup"
 
-export type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>
+export type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  node?: AppNode
+}
 
 const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, ...props }, ref) => {
+  ({ className, node, ...props }, ref) => {
     const [value, setValue] = useState(props.value as string)
-    
+    const [openValueSelector, setOpenValueSelector] = useState(false)
+
+    const [key, setKey] = useState(Math.random() * 1000)
+
+    useEffect(() => {
+      if (!openValueSelector)
+      setKey(Math.random() * 1000)
+    },[openValueSelector])
+
+    useEffect(() => {
+      setValue((props.value || '') as string)
+    },[props.value])
+
     return (
       <div className="relative">
         <textarea
@@ -40,9 +56,19 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
                 </DialogDescription>
               </DialogHeader>
               <RichTextEditor
-                initialContent={props.value as string}
+                key={key}
+                initialContent={value}
                 onChange={(e) => setValue(e)}
+                extraToolButtons={(
+                  <Button size="icon" variant="ghost" onClick={() => setOpenValueSelector(true)}>
+                    <Route size={16} />
+                  </Button>
+                )}
               />
+              {node ? <ValueSelectorPopup open={openValueSelector} baseNode={node} onSelect={(s) => {
+                setValue(x => x + s)
+                setOpenValueSelector(false)
+              }} onClose={() => setOpenValueSelector(false)} /> : null}
               <DialogFooter>
                 <DialogClose asChild>
                   <Button onClick={() =>

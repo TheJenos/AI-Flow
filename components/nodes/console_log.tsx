@@ -1,6 +1,6 @@
 import { Captions } from 'lucide-react';
-import { AppContext, NodeMetaData, NodeOutput, NodeState } from '@/lib/nodes';
-import { useFlowStore, AppNode, AppNodeProp, NodeData } from '@/lib/store';
+import { AppContext, Controller, NodeLogViewProps, NodeMetaData, NodeOutput } from '@/lib/nodes';
+import { useFlowStore, AppNode, AppNodeProp, NodeData, useRuntimeStore } from '@/lib/store';
 import { cloneDeep, set } from 'lodash';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
@@ -12,6 +12,7 @@ import NoteIcon from '../node_utils/node_icon';
 import { ThreadSourceHandle, ThreadTargetHandle } from '../node_utils/thread_handle';
 import DevMode from '../node_utils/dev_mode';
 import { replaceDynamicValueWithActual } from '@/lib/logics';
+import MarkdownViewer from '../ui/markdown_viewer';
 
 type ConsoleLogData = NodeData & {
     log: string
@@ -39,8 +40,24 @@ export const Outputs = (node: AppNode<ConsoleLogData>) => {
     } as NodeOutput
 }
 
-export const Process = async (context: AppContext, node: AppNode<ConsoleLogData>, nextNodes: AppNode[]) => {
-    console.log(`Log:${node.id} `, replaceDynamicValueWithActual(node.data.log, context));
+export function LogView({ payload }: NodeLogViewProps<string>) {
+    return <>
+        <MarkdownViewer text={payload} />
+    </>;
+}
+
+export const Process = async (context: AppContext, node: AppNode<ConsoleLogData>, nextNodes: AppNode[], controller: Controller) => {
+    const output = replaceDynamicValueWithActual(node.data.log, context)
+    if (output) {
+        console.log(`Log:${node.id} `, output);
+        controller.log({
+            id: node.id,
+            type: 'success',
+            title: "Log has send to the browser console as well",
+            nodeType: node.type,
+            payload: output
+        });
+    }
     return nextNodes
 }
 
@@ -73,6 +90,7 @@ export const Properties = ({ node }: { node: AppNode<ConsoleLogData> }) => {
                     className='h-20'
                     placeholder='Enter your statement here...'
                     onChange={(e) => setValue('log', e.target.value)}
+                    node={node}
                 />
             </div>
         </div>
@@ -98,12 +116,11 @@ const noteStateVariants = cva(
     }
 )
 
-export function Node({ isConnectable, data }: AppNodeProp) {
+export function Node({ id, selectable, isConnectable, data }: AppNodeProp) {
+    const state = useRuntimeStore((state) => selectable != undefined && !selectable ? "faded" : state.nodeStates[id])
     const name = useMemo(() => {
         return (data?.name || Metadata.name) as string;
     }, [data?.name]);
-
-    const state = (data.state || 'idle') as NodeState;
 
     return (
         <div className={cn(noteStateVariants({ state }))}>

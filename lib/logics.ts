@@ -1,9 +1,10 @@
 import { get } from "lodash";
 import { AppContext } from "./nodes";
 
-const valueReg = new RegExp('\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}', 'gm')
+export const valueReg = new RegExp('\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}', 'gm')
 
 const filterStatement = (statement: string) => {
+    if(!statement) return ''
     return statement.replaceAll(/(?<![<>!])=(?!=)/g, "==").replaceAll('===', '==');
 }
 

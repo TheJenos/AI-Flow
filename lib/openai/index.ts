@@ -175,7 +175,7 @@ export function OpenAiFaker() {
                             index: 0,
                             message: {
                                 role: 'assistant',
-                                content: 'This is a fake response.'
+                                content: '## This is a fake response. \nLorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
                             },
                             logprobs: null,
                             finish_reason: 'stop'

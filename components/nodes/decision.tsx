@@ -1,7 +1,7 @@
 import { CircleHelp, PenBox } from 'lucide-react';
 import { Card } from '../ui/card';
-import { AppContext, getNodeDetails, NodeMetaData, NodeState, Controller } from '@/lib/nodes';
-import { useFlowStore, AppNode, AppNodeProp } from '@/lib/store';
+import { AppContext, getNodeDetails, NodeMetaData } from '@/lib/nodes';
+import { useFlowStore, AppNode, AppNodeProp, useRuntimeStore } from '@/lib/store';
 import { cloneDeep, get, set } from 'lodash';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
@@ -29,7 +29,7 @@ export const Metadata: NodeMetaData = {
     OnDisconnect,
 }
 
-export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[], controller: Controller) => {
+export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[]) => {
 
     const allDecisions = (node.data.decisions || {}) as {
         [key: string]: {
@@ -199,12 +199,11 @@ const noteStateVariants = cva(
     }
 )
 
-export function Node({ isConnectable, data }: AppNodeProp) {
+export function Node({ id, selectable, isConnectable, data }: AppNodeProp) {
+    const state = useRuntimeStore((state) => selectable != undefined && !selectable ? "faded" : state.nodeStates[id])
     const name = useMemo(() => {
         return (data?.name || Metadata.name) as string;
     }, [data?.name]);
-
-    const state = (data.state || 'idle') as NodeState;
 
     return (
         <div className={cn(noteStateVariants({ state }))}>

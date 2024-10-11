@@ -5,21 +5,20 @@ import { PlayCircle, Scan, StopCircle } from "lucide-react";
 import { useShallow } from "zustand/shallow";
 import { AppContext, Controller, getNodeDetails, NodeState } from "@/lib/nodes";
 import { getOutgoers, useReactFlow } from "@xyflow/react";
-import { cloneDeep, set } from "lodash";
+import { set } from "lodash";
 import { AppNode, useFlowStore, useRuntimeStore } from "@/lib/store";
-import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import UndoRedo from "../node_utils/undo_redo";
+import { Button } from "../ui/button";
 
 export default function Controllers() {
   const { toast } = useToast()
-  const { nodes, edges, updateNode } = useFlowStore(useShallow(s => ({
+  const { nodes, edges } = useFlowStore(useShallow(s => ({
     nodes: s.nodes,
-    edges: s.edges,
-    updateNode: s.updateNode
+    edges: s.edges
   })))
 
-  const { isRunning, start, stop, log, increaseInToken, increaseOutToken, increaseAmount} = useRuntimeStore(useShallow(s => ({
+  const { isRunning, start, stop, log, increaseInToken, increaseOutToken, increaseAmount, setNodeState, setNodeStateFromNodeId} = useRuntimeStore(useShallow(s => ({
     isRunning: s.isRunning,
     start: s.start,
     stop: s.stop,
@@ -27,15 +26,15 @@ export default function Controllers() {
     increaseInToken: s.increaseInToken,
     increaseOutToken: s.increaseOutToken,
     increaseAmount: s.increaseAmount,
+    setNodeState: s.setNodeState,
+    setNodeStateFromNodeId: s.setNodeStateFromNodeId,
   })));
 
   const reactFlow = useReactFlow();
 
   const updateNodeState = (node: AppNode, state: NodeState, context?: AppContext) => {
-    const clonedNode = cloneDeep(node);
-    set(clonedNode, 'data.state', state);
+    setNodeStateFromNodeId(node.id, state);
     if (context) set(context,`${node.id}.state`, state)
-    updateNode(clonedNode);
   }
 
   const makeAllNodesState = (node: AppNode, state: NodeState, context?: AppContext, path: string[] = []) => {
@@ -76,6 +75,13 @@ export default function Controllers() {
         updateNodeState(node, 'completed', context);
       } catch (error) {
         console.log(error);
+
+        controller.log({
+          id: node.id,
+          nodeType: node.type,
+          type: 'error',
+          title: (error as Error).message,
+        })
         
         toast({
           title: `Something went wrong on ${node.data.name || details.name}`,
@@ -96,28 +102,19 @@ export default function Controllers() {
 
     stop();
     setTimeout(() => {
-      nodes.forEach((node: AppNode) => {
-        updateNodeState(node, 'idle');
-      });
+      setNodeState(Object.fromEntries(nodes.map(x => [x.id, 'idle'])))
     }, 3000);
   }
-
-  useEffect(() => {
-    nodes.forEach((node: AppNode) => {
-      updateNodeState(node, 'idle');
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   return (
     <Card className="absolute top-2 left-1/2 -translate-x-1/2 p-1 flex gap-1 z-50">
       <UndoRedo/>
       <NewNode />
-      <Toggle onClick={() => reactFlow.fitView({
+      <Button variant={'ghost'} size={'icon'} onClick={() => reactFlow.fitView({
         padding: 0.3
       })} >
         <Scan/>
-      </Toggle>
+      </Button>
       <Toggle pressed={isRunning} onClick={isRunning ? stop : startWrapper}>
         {isRunning ? <StopCircle size={20} /> : <PlayCircle size={20} />}
       </Toggle>

@@ -1,6 +1,6 @@
 import { Plus, ScrollText, Trash } from 'lucide-react';
-import { AppContext, NodeMetaData, NodeOutput, NodeState, OutputExtra, Controller } from '@/lib/nodes';
-import { useFlowStore, AppNode, AppNodeProp, NodeData, useSettingStore } from '@/lib/store';
+import { AppContext, NodeMetaData, NodeOutput, OutputExtra, Controller, NodeLogViewProps } from '@/lib/nodes';
+import { useFlowStore, AppNode, AppNodeProp, NodeData, useSettingStore, useRuntimeStore } from '@/lib/store';
 import { cloneDeep, set } from 'lodash';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
@@ -14,8 +14,10 @@ import { ThreadSourceHandle, ThreadTargetHandle } from '../node_utils/thread_han
 import DevMode from '../node_utils/dev_mode';
 import { Button } from '../ui/button';
 import ConfirmAlert from '../ui/confirm_alert';
-import { Message, modelDetails, OpenAi, OpenAiFaker, openAiTokenToCost } from '@/lib/openai';
+import { ChatCompletion, Message, modelDetails, OpenAi, OpenAiFaker, openAiTokenToCost } from '@/lib/openai';
 import { replaceDynamicValueWithActual } from '@/lib/logics';
+import { Stats } from '../node_utils/stats';
+import MarkdownViewer from '../ui/markdown_viewer';
 
 type PromptData = NodeData & {
     model: string,
@@ -28,6 +30,21 @@ export const Metadata: NodeMetaData = {
     name: 'OpenAI Chat Prompt',
     description: 'Generate a response based on the given prompt',
     tags: ['OpenAI', 'ChatGPT', 'prompt']
+}
+
+type LogViewPayload = {
+    assistant_output: string
+    usage: ChatCompletion['usage']
+    amount: number
+    startTime: number
+    endTime: number
+}
+
+export function LogView({ payload }: NodeLogViewProps<LogViewPayload>) {
+    return <>
+        <MarkdownViewer text={payload.assistant_output} />
+        <Stats amount={payload.amount} outToken={payload.usage.prompt_tokens} inToken={payload.usage.completion_tokens} startTime={payload.startTime} endTime={payload.endTime} />
+    </>;
 }
 
 export const Outputs = (node: AppNode<PromptData>, extra: OutputExtra) => {
@@ -61,10 +78,10 @@ export const Process = async (context: AppContext, node: AppNode<PromptData>, ne
     if (!isTestAPI && !token) throw Error("You need to add OpenAI Token in the setting to continue or you can use test api on dev mode for testing")
 
     const model = node.data.model
-    if (!model) throw Error("Model type is requried")
+    if (!model) throw Error("Model type is required")
 
     const systemPrompt = node.data.system_prompt
-    if (!systemPrompt) throw Error("System prompt is requried")
+    if (!systemPrompt) throw Error("System prompt is required")
 
     const client = isTestAPI ? OpenAiFaker() : OpenAi(token)
 
@@ -78,17 +95,36 @@ export const Process = async (context: AppContext, node: AppNode<PromptData>, ne
         ...otherPrompts
     ] as Message[]
 
+    const startTime = new Date().getTime();
+
     const response = await client.chat({
         model,
-        messages: messages.map(x => {
-            x.content = replaceDynamicValueWithActual(x.content || '', context)
-            return x
-        })
+        messages: messages.map(x => ({
+            ...x,
+            content: replaceDynamicValueWithActual(x.content || '', context)
+        }))
     })
+
+    const endTime = new Date().getTime();
+    const amount = openAiTokenToCost(response.data.usage.total_tokens, model)
+
+    controller.log({
+        id: node.id,
+        type: 'success',
+        title: "Request successfully executed",
+        nodeType: node.type,
+        payload: {
+            assistant_output: response.data.choices[0].message.content,
+            usage: response.data.usage,
+            amount,
+            startTime,
+            endTime
+        }
+    });
 
     controller.increaseOutToken(response.data.usage.prompt_tokens)
     controller.increaseInToken(response.data.usage.completion_tokens)
-    controller.increaseAmount(openAiTokenToCost(response.data.usage.total_tokens, model))
+    controller.increaseAmount(amount)
 
     context[node.id] = Object.fromEntries(Object.entries(Outputs(node, {
         assistant_output: response.data.choices[0].message.content
@@ -138,7 +174,7 @@ export const Properties = ({ node }: { node: AppNode<PromptData> }) => {
             return;
         }
 
-        const updatedPrompts = prompts.filter((_,i) => i != promptIndex);
+        const updatedPrompts = prompts.filter((_, i) => i != promptIndex);
         setDeletePrompt(undefined);
         setPrompts(updatedPrompts);
         const clonedNode = cloneDeep(node);
@@ -163,8 +199,8 @@ export const Properties = ({ node }: { node: AppNode<PromptData> }) => {
                     <SelectTrigger>
                         <SelectValue id="model" placeholder="Select a model" />
                     </SelectTrigger>
-                    <SelectContent>                       
-                        {modelDetails.map((x,index) => (
+                    <SelectContent>
+                        {modelDetails.map((x, index) => (
                             <SelectItem key={index} value={x.title}>{x.name}</SelectItem>
                         ))}
                     </SelectContent>
@@ -179,9 +215,10 @@ export const Properties = ({ node }: { node: AppNode<PromptData> }) => {
                     className='h-20'
                     placeholder='Enter your system prompt here...'
                     onChange={(e) => setValue('system_prompt', e.target.value)}
+                    node={node}
                 />
             </div>
-            {prompts.map((prompt,index) => (
+            {prompts.map((prompt, index) => (
                 <div key={index} className='flex flex-col gap-1'>
                     <div className='flex'>
                         <Label className='text-sm font-semibold' htmlFor="system_prompt">{prompt.role == 'user' ? "User" : "Assistant"} Prompt</Label>
@@ -201,6 +238,7 @@ export const Properties = ({ node }: { node: AppNode<PromptData> }) => {
                         className='h-20'
                         placeholder='Enter your prompt here...'
                         onChange={(e) => setPromptValue(index, e.target.value)}
+                        node={node}
                     />
                 </div>
             ))}
@@ -256,12 +294,11 @@ const noteStateVariants = cva(
     }
 )
 
-export function Node({ isConnectable, data }: AppNodeProp) {
+export function Node({ id, selectable, isConnectable, data }: AppNodeProp) {
+    const state = useRuntimeStore((state) => selectable != undefined && !selectable ? "faded" : state.nodeStates[id])
     const name = useMemo(() => {
         return (data?.name || Metadata.name) as string;
     }, [data?.name]);
-
-    const state = (data.state || 'idle') as NodeState;
 
     return (
         <div className={cn(noteStateVariants({ state }))}>

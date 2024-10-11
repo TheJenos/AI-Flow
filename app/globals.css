@@ -68,7 +68,8 @@
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 5px;
+  border-radius: calc(0.5rem - 2px);
 }
 
 ::-webkit-scrollbar-track {

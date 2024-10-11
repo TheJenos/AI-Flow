@@ -1,9 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Editor, EditorState, RichUtils, getDefaultKeyBinding, DraftHandleValue, DraftStyleMap, ContentBlock, convertFromRaw, convertToRaw } from 'draft-js';
 import { draftToMarkdown, markdownToDraft } from 'markdown-draft-js';
 import 'draft-js/dist/Draft.css';
 import { Heading1, Heading2, Heading3, Heading4, Heading5, Heading6, TextQuote, List, ListOrdered, Code, Bold, Italic, Underline, Baseline } from 'lucide-react';
 import { Toggle } from './toggle';
+import { DecoratorFactory } from 'react-highlight-within-textarea'
+import { valueReg } from '@/lib/logics';
 
 const styleMap: DraftStyleMap = {
   CODE: {
@@ -45,9 +47,10 @@ interface BlockStyleControlsProps {
   editorState: EditorState;
   onToggleBlock: (inlineStyle: string) => void;
   onToggleInline: (inlineStyle: string) => void;
+  extraToolButtons?: React.JSX.Element
 }
 
-function BlockStyleControls({ editorState, onToggleBlock, onToggleInline }: BlockStyleControlsProps) {
+function BlockStyleControls({ editorState, onToggleBlock, onToggleInline, extraToolButtons }: BlockStyleControlsProps) {
   const selection = editorState.getSelection();
   const blockType = editorState
     .getCurrentContent()
@@ -75,6 +78,7 @@ function BlockStyleControls({ editorState, onToggleBlock, onToggleInline }: Bloc
           );
         }
       )}
+      {extraToolButtons}
     </div>
   );
 }
@@ -82,9 +86,10 @@ function BlockStyleControls({ editorState, onToggleBlock, onToggleInline }: Bloc
 interface RichTextEditorProps {
   initialContent?: string;
   onChange?: (content: string) => void;
+  extraToolButtons?: React.JSX.Element
 }
 
-function RichTextEditor({ initialContent, onChange }: RichTextEditorProps) {
+function RichTextEditor({ initialContent, onChange, extraToolButtons }: RichTextEditorProps) {
   const [editorState, setEditorState] = useState(() => {
     if (initialContent) {
       const contentState = convertFromRaw(markdownToDraft(initialContent));
@@ -94,13 +99,6 @@ function RichTextEditor({ initialContent, onChange }: RichTextEditorProps) {
   });
   
   const editor = useRef<Editor>(null);
-
-  useEffect(() => {
-    if (initialContent) {
-      const contentState = convertFromRaw(markdownToDraft(initialContent));
-      setEditorState(EditorState.createWithContent(contentState));
-    }
-  }, [initialContent]);
 
   const focus = () => {
     if (editor.current) editor.current.focus();
@@ -167,18 +165,31 @@ function RichTextEditor({ initialContent, onChange }: RichTextEditorProps) {
     }
   }
 
+  const decoratorFactory = useRef(new DecoratorFactory()).current;
+  const decorator = decoratorFactory.create(contentState, [
+    {
+      highlight: valueReg,
+      className: "font-bold text-primary bg-white", //tw
+    },
+  ]);
+
+  const newEditorState = EditorState.set(editorState, {
+    decorator: decorator,
+  });
+
   return (
     <div className="RichEditor-root">
       <BlockStyleControls
         editorState={editorState}
         onToggleBlock={toggleBlockType}
         onToggleInline={toggleInlineStyle}
+        extraToolButtons={extraToolButtons}
       />
       <div className={className} onClick={focus}>
         <Editor
           blockStyleFn={getBlockStyle}
           customStyleMap={styleMap}
-          editorState={editorState}
+          editorState={newEditorState}
           handleKeyCommand={handleKeyCommand}
           keyBindingFn={mapKeyToEditorCommand}
           onChange={handleChange}

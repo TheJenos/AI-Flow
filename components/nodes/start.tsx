@@ -1,20 +1,23 @@
 import { PlayCircle, Plus, Trash } from 'lucide-react';
 import { useState } from 'react';
-import { useFlowStore, AppNode, AppNodeProp } from '@/lib/store';
+import { useFlowStore, AppNode, AppNodeProp, useRuntimeStore } from '@/lib/store';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { set, cloneDeep, snakeCase } from 'lodash'
-import { AppContext, NodeMetaData, NodeState, Controller, NodeOutput } from '@/lib/nodes';
+import { AppContext, NodeMetaData, Controller, NodeOutput, NodeLogViewProps } from '@/lib/nodes';
 import { cva } from 'class-variance-authority';
-import { cn } from '@/lib/utils';
+import { cn, trimStrings } from '@/lib/utils';
 import { ThreadSourceHandle } from '../node_utils/thread_handle';
 import DevMode from '../node_utils/dev_mode';
 import ConfirmAlert from '../ui/confirm_alert';
 
 type Property = { name: string; type: string };
+type PropValues = {
+    [k: string]: string | number | undefined;
+}
 
 export const Metadata: NodeMetaData = {
     type: 'start',
@@ -22,6 +25,16 @@ export const Metadata: NodeMetaData = {
     description: 'The first node in the flow. Please add a your initial values here.',
     tags: [],
     notAddable: true
+}
+
+export function LogView({payload}: NodeLogViewProps<PropValues>) {
+    return <div className='bg-accent p-2 text-xs rounded-md'>
+        {Object.entries(payload).map(([key,value],index) => (
+            <div key={index}>
+                {key} : {trimStrings(value?.toString())}
+            </div>
+        ))}
+    </div>;
 }
 
 export const Outputs = (node: AppNode) => {
@@ -45,7 +58,7 @@ export const Process = async (context: AppContext, node: AppNode, nextNodes: App
     context[node.id] = payload
     controller.log({
         id: node.id,
-        type: 'success',
+        type: 'info',
         title: "Initial values has been added to the context",
         nodeType: node.type,
         payload
@@ -55,11 +68,11 @@ export const Process = async (context: AppContext, node: AppNode, nextNodes: App
 
 export const Properties = ({ node }: { node: AppNode }) => {
     const existingProperties = (node.data.properties || []) as Property[];
-    const existingPropertyValues = (node.data.propertyValues || {}) as { [key: string]: string | number | undefined };
+    const existingPropertyValues = (node.data.propertyValues || {}) as { [key: string]: string | number | undefined | string[] };
 
     const [deleteProperty, setDeleteProperty] = useState<Property>();
     const [properties, setProperties] = useState<Property[]>(existingProperties);
-    const [propertyValues, setPropertyValues] = useState<{ [key: string]: string | number | undefined }>(existingPropertyValues);
+    const [propertyValues, setPropertyValues] = useState<{ [key: string]: string | number | undefined | string[] }>(existingPropertyValues);
     const [selectedType, setSelectedType] = useState<string>();
 
     const updateNode = useFlowStore(state => state.updateNode);
@@ -78,9 +91,9 @@ export const Properties = ({ node }: { node: AppNode }) => {
         setSelectedType(undefined);
         (e.target as HTMLFormElement).reset();
     };
-
     const handleDelete = (prop: Property, force: boolean = false) => {
-        if (!force && propertyValues[prop.name]) {
+        const value = propertyValues[prop.name];
+        if (!force && (value || Array.isArray(value) && value.length > 0)) {
             setDeleteProperty(prop);
             return;
         }
@@ -100,6 +113,7 @@ export const Properties = ({ node }: { node: AppNode }) => {
 
     const renderInput = (prop: { name: string; type: string }) => {
         const value = propertyValues[prop.name] || '';
+        const arrayValue = propertyValues[prop.name] as string[] || []; // Get array value for the property
         const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
             setPropertyValues({
                 ...propertyValues,
@@ -110,11 +124,69 @@ export const Properties = ({ node }: { node: AppNode }) => {
             updateNode(clonedNode);
         };
 
+        const handleArrayChange = (propName: string, value: string) => {
+            const updatedArray = [...(propertyValues[propName] as string[] || []), value];
+            setPropertyValues(prev => ({
+                ...prev,
+                [propName]: updatedArray // Store array values in propertyValues
+            }));
+            const clonedNode = cloneDeep(node);
+            set(clonedNode, `data.propertyValues.${propName}`, updatedArray);
+            updateNode(clonedNode);
+        };
+    
+        const handleRemoveFromArray = (propName: string, value: string) => {
+            const updatedArray = (propertyValues[propName] as string[] || []).filter(item => item !== value);
+            setPropertyValues(prev => ({
+                ...prev,
+                [propName]: updatedArray // Update the array in propertyValues
+            }));
+            const clonedNode = cloneDeep(node);
+            set(clonedNode, `data.propertyValues.${propName}`, updatedArray);
+            updateNode(clonedNode);
+        };
+    
+
         switch (prop.type) {
             case 'textarea':
                 return <Textarea id={prop.name} className='' placeholder={prop.name} value={value} onChange={handleChange} />;
             case 'checkbox':
                 return <input id={prop.name} type='checkbox' checked={value === 'yes'} onChange={handleChange} />;
+            case 'array':
+                return (
+                    <div>
+                        <Input
+                            type="text"
+                            placeholder={`Type your value and press Enter`}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleArrayChange(prop.name, (e.target as HTMLInputElement).value);
+                                    (e.target as HTMLInputElement).value = '';
+                                }
+                            }}
+                        />
+                        <div className='bg-accent p-2 rounded-md mt-2 flex flex-col gap-2'>
+                            {arrayValue.length === 0 ? (
+                                <span className="text-gray-500 text-sm text-center">No items in the array.</span>
+                            ) : (
+                                arrayValue.map((val, index) => (
+                                    <div key={index} className="flex items-center justify-between bg-white rounded-md p-2 text-sm ">
+                                        <span>{val}</span>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleRemoveFromArray(prop.name, val)}
+                                            className="text-red-500 hover:text-red-700 p-0.5 h-6 w-6 ml-2"
+                                        >
+                                            <Trash className='w-3 h-3' />
+                                        </Button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                );
             default:
                 return <Input id={prop.name} className='h-8' type={prop.type} placeholder={prop.name} value={value} onChange={handleChange} />;
         }
@@ -126,7 +198,7 @@ export const Properties = ({ node }: { node: AppNode }) => {
                 <div key={index} className="flex flex-col pb-2 border-b border-gray-200">
                     <div className="flex items-center mb-1 gap-2">
                         <Label className='text-sm font-semibold' htmlFor={prop.name}>{prop.name}</Label>
-                        {prop.type == 'checkbox' ? renderInput(prop) : null}
+                        {prop.type === 'checkbox' ? renderInput(prop) : null}
                         <Button
                             variant="ghost"
                             size="sm"
@@ -136,7 +208,7 @@ export const Properties = ({ node }: { node: AppNode }) => {
                             <Trash className='w-4 h-4' />
                         </Button>
                     </div>
-                    {prop.type == 'checkbox' ? null : renderInput(prop)}
+                    {prop.type === 'checkbox' ? null : renderInput(prop)}
                 </div>
             ))}
             <form onSubmit={handleSubmit} className="flex flex-col gap-2">
@@ -164,6 +236,7 @@ export const Properties = ({ node }: { node: AppNode }) => {
                             <SelectItem value="number">Number</SelectItem>
                             <SelectItem value="checkbox">Checkbox</SelectItem>
                             <SelectItem value="textarea">Textarea</SelectItem>
+                            <SelectItem value="array">Array</SelectItem>
                         </SelectContent>
                     </Select>
                     <Button className='w-24 h-8' size={'icon'} type="submit">
@@ -201,8 +274,8 @@ const noteStateVariants = cva(
     }
 )
 
-export function Node({ isConnectable, data }: AppNodeProp) {
-    const state = (data.state || 'idle') as NodeState;
+export function Node({ id, selectable, isConnectable, data }: AppNodeProp) {
+    const state = useRuntimeStore((state) => selectable != undefined && !selectable ? "faded" : state.nodeStates[id])
 
     return (
         <div className={cn(noteStateVariants({ state }))}>
