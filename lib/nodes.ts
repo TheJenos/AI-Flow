@@ -4,10 +4,13 @@ import * as MultiTreadNode from "@/components/nodes/multi_thread";
 import * as TreadMergeNode from "@/components/nodes/thread_merge";
 import * as DecisionNode from "@/components/nodes/decision";
 import * as ConsoleLogNode from "@/components/nodes/console_log";
-import { AppNode, NodeLogs } from "./store";
-import Decimal from "decimal.js-light";
+import * as SetStateNode from "@/components/nodes/set_state";
 
-export type NodeType = "start" | "prompt" | "multi_thread" | "thread_merge" | "decision" | "console_log"
+import { AppNode, NodeLogs, UpdatePayload } from "./store";
+import Decimal from "decimal.js-light";
+import { Edge } from "@xyflow/react";
+
+export type NodeType = "start" | "prompt" | "multi_thread" | "thread_merge" | "decision" | "console_log" | "set_state"
 
 const nodes = [
     StartNode,
@@ -15,7 +18,8 @@ const nodes = [
     MultiTreadNode,
     TreadMergeNode,
     DecisionNode,
-    ConsoleLogNode
+    ConsoleLogNode,
+    SetStateNode
 ];
 
 export type NodeState = 'idle' | 'faded' | 'waiting' | 'running' | 'completed' | 'failed';
@@ -53,7 +57,15 @@ export type NodeLogViewProps<T = unknown> = {
 export type NodeLogView = (props: NodeLogViewProps) => JSX.Element
 export type NodeOutputs = ( node: AppNode, extra: OutputExtra ) => NodeOutput
 export type NodeProcess = (context: AppContext, node: AppNode, nextNodes: AppNode[], Controller: Controller) => Promise<AppNode[]>
-export type NodeOnDisconnect = (node: AppNode, otherNode: AppNode, updates: { [key: string]: unknown }) => Promise<void>
+
+export type NodeConnectDisconnectPayload = {
+    nodes: AppNode[]
+    edges: Edge[]
+    sourceNode: AppNode
+    targetNode: AppNode
+    connectedEdge?: Edge 
+}
+export type NodeOnConnectDisconnect = (payload: NodeConnectDisconnectPayload, updates: UpdatePayload) => Promise<void>
 
 export type NodeMetaData = {
     type: NodeType;
@@ -61,7 +73,9 @@ export type NodeMetaData = {
     description: string;
     tags: string[],
     notAddable?: boolean;
-    OnDisconnect?: NodeOnDisconnect;
+    valueIdentifier?: (node: AppNode) => string;
+    OnConnect?: NodeOnConnectDisconnect;
+    OnDisconnect?: NodeOnConnectDisconnect;
 }
 
 export type NodeDetails = NodeMetaData & {

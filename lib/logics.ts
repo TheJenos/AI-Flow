@@ -3,6 +3,13 @@ import { AppContext } from "./nodes";
 
 export const valueReg = new RegExp('\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}', 'gm')
 
+export const headlights = [
+    {
+        highlight: valueReg,
+        className: "font-semibold text-blue-600 bg-white", //tw
+    },
+]
+
 const filterStatement = (statement: string) => {
     if(!statement) return ''
     return statement.replaceAll(/(?<![<>!])=(?!=)/g, "==").replaceAll('===', '==');

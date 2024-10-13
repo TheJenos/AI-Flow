@@ -28,8 +28,8 @@ export const Metadata: NodeMetaData = {
 }
 
 export function LogView({payload}: NodeLogViewProps<PropValues>) {
-    return <div className='bg-accent p-2 text-xs rounded-md'>
-        {Object.entries(payload).map(([key,value],index) => (
+    return <div className='bg-accent p-2 text-xs rounded-md border border-gray-300'>
+        {Object.entries(payload).filter(x=> x[0] != 'state').map(([key,value],index) => (
             <div key={index}>
                 {key} : {trimStrings(value?.toString())}
             </div>
@@ -56,6 +56,7 @@ export const Outputs = (node: AppNode) => {
 export const Process = async (context: AppContext, node: AppNode, nextNodes: AppNode[], controller: Controller) => {
     const payload = Object.fromEntries(Object.entries(Outputs(node)).map(([key,value]) => [key, value.value]))
     context[node.id] = payload
+    if (Object.keys(payload).length)
     controller.log({
         id: node.id,
         type: 'info',
@@ -193,7 +194,7 @@ export const Properties = ({ node }: { node: AppNode }) => {
     };
 
     return (
-        <div className='px-2 flex flex-col gap-2'>
+        <div className='flex flex-col gap-3 px-3'>
             {properties.map((prop, index) => (
                 <div key={index} className="flex flex-col pb-2 border-b border-gray-200">
                     <div className="flex items-center mb-1 gap-2">
@@ -219,7 +220,6 @@ export const Properties = ({ node }: { node: AppNode }) => {
                         placeholder="Name"
                         name="name"
                         required
-                        className='h-8'
                         autoComplete='off'
                     />
                     <Select
@@ -228,8 +228,8 @@ export const Properties = ({ node }: { node: AppNode }) => {
                         value={selectedType}
                         onValueChange={(e) => setSelectedType(e)}
                     >
-                        <SelectTrigger className='h-8'>
-                            <SelectValue className='w-full h-8' placeholder="Type" />
+                        <SelectTrigger>
+                            <SelectValue className='w-full' placeholder="Type" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="text">Text</SelectItem>
@@ -239,7 +239,7 @@ export const Properties = ({ node }: { node: AppNode }) => {
                             <SelectItem value="array">Array</SelectItem>
                         </SelectContent>
                     </Select>
-                    <Button className='w-24 h-8' size={'icon'} type="submit">
+                    <Button className='w-24' size={'icon'} type="submit">
                         <Plus className='w-4 h-4' />
                     </Button>
                 </div>

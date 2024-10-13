@@ -60,7 +60,7 @@ export const getSmartEdge = <NodeDataType = unknown>({
 			generatePath = pathfindingAStarDiagonal
 		} = options
 
-		let { gridRatio = 15, nodePadding = 5 } = options
+		let { gridRatio = 15, nodePadding = 10 } = options
 		gridRatio = toInteger(gridRatio)
 		nodePadding = toInteger(nodePadding)
 
@@ -131,7 +131,9 @@ export const getSmartEdge = <NodeDataType = unknown>({
 		)
 
 		return { svgPathString, edgeCenterX, edgeCenterY }
-	} catch {
+	} catch (error) {
+		console.log(error);
+		
 		return null
 	}
 }

@@ -5,7 +5,7 @@ import 'draft-js/dist/Draft.css';
 import { Heading1, Heading2, Heading3, Heading4, Heading5, Heading6, TextQuote, List, ListOrdered, Code, Bold, Italic, Underline, Baseline } from 'lucide-react';
 import { Toggle } from './toggle';
 import { DecoratorFactory } from 'react-highlight-within-textarea'
-import { valueReg } from '@/lib/logics';
+import { headlights } from '@/lib/logics';
 
 const styleMap: DraftStyleMap = {
   CODE: {
@@ -166,12 +166,7 @@ function RichTextEditor({ initialContent, onChange, extraToolButtons }: RichText
   }
 
   const decoratorFactory = useRef(new DecoratorFactory()).current;
-  const decorator = decoratorFactory.create(contentState, [
-    {
-      highlight: valueReg,
-      className: "font-bold text-primary bg-white", //tw
-    },
-  ]);
+  const decorator = decoratorFactory.create(contentState, headlights);
 
   const newEditorState = EditorState.set(editorState, {
     decorator: decorator,

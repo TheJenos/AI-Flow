@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Background, BackgroundVariant, getIncomers, MarkerType, NodeChange, NodeSelectionChange, ReactFlow, ReactFlowProvider } from "@xyflow/react";
 import CustomEdge from "./custom_edge";
-import { getNodeDetails, NodeDetails, NodeOutput, nodeMap } from "@/lib/nodes";
+import { getNodeDetails, NodeDetails, NodeOutput, nodeMap, NodeMetaData } from "@/lib/nodes";
 import { useMemo, useState } from "react";
 import { AppNode, useFlowStore } from "@/lib/store";
 import { useShallow } from "zustand/shallow";
@@ -57,6 +57,11 @@ export default function ValueSelectorPopup({ baseNode, open, onSelect, onClose }
                setSelectedNode(selectedChange.selected ? { node, nodeDetails, outputs } : undefined)
             }
         }
+    }
+
+    const addDynamicValue = (node: AppNode, details: NodeMetaData, key: string) => {
+        const valueIdentifier = details.valueIdentifier && details.valueIdentifier(node) || node.id
+        onSelect(`{${valueIdentifier}.${key}}`)
     }
 
     return (
@@ -121,7 +126,7 @@ export default function ValueSelectorPopup({ baseNode, open, onSelect, onClose }
                                             </div>
                                         </div>
                                     </div>
-                                    <div>
+                                    <div className="h-full overflow-y-auto">
                                         {Object.keys(selectedNode.outputs).map(x => (
                                             <div key={x} className="flex items-center justify-between p-2 border-b border-gray-200">
                                                 <div>
@@ -129,7 +134,7 @@ export default function ValueSelectorPopup({ baseNode, open, onSelect, onClose }
                                                     {selectedNode.outputs[x].description ? <p className="text-xs text-gray-500">{selectedNode.outputs[x].description}</p> : null}
                                                     {selectedNode.outputs[x].value ? <p className="text-xs text-gray-500">Current : {trimStrings(selectedNode.outputs[x].value.toString())}</p> : null}
                                                 </div>
-                                                <Button size="icon" variant="ghost" onClick={() => onSelect(`{${selectedNode.node.id}.${x}}`)} ><Plus /></Button>
+                                                <Button size="icon" variant="ghost" onClick={() => addDynamicValue(selectedNode.node, selectedNode.nodeDetails, x)} ><Plus /></Button>
                                             </div>
                                         ))}
                                     </div>

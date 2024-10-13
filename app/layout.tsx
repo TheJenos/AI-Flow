@@ -1,6 +1,7 @@
 "use client"
 
 import localFont from "next/font/local";
+import '@xyflow/react/dist/base.css';
 import "./globals.css";
 import { ReactNode } from "react";
 import BaseLayout from "@/components/layout/base_layout";

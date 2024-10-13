@@ -47,7 +47,7 @@ export const Properties = ({ node }: { node: AppNode }) => {
     }
 
     return (
-        <div className='flex flex-col gap-2 px-2'>
+        <div className='flex flex-col gap-2 px-3'>
             <div className='flex flex-col gap-1'>
                 <Label>Name</Label>
                 <Input

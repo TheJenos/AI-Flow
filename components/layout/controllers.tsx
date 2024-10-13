@@ -10,12 +10,14 @@ import { AppNode, useFlowStore, useRuntimeStore } from "@/lib/store";
 import { useToast } from "@/hooks/use-toast";
 import UndoRedo from "../node_utils/undo_redo";
 import { Button } from "../ui/button";
+import { cn } from "@/lib/utils";
 
 export default function Controllers() {
   const { toast } = useToast()
-  const { nodes, edges } = useFlowStore(useShallow(s => ({
+  const { nodes, edges, clearSelection } = useFlowStore(useShallow(s => ({
     nodes: s.nodes,
-    edges: s.edges
+    edges: s.edges,
+    clearSelection: s.clearSelection
   })))
 
   const { isRunning, start, stop, log, increaseInToken, increaseOutToken, increaseAmount, setNodeState, setNodeStateFromNodeId} = useRuntimeStore(useShallow(s => ({
@@ -47,6 +49,7 @@ export default function Controllers() {
 
   const startWrapper = async () => {
     if (isRunning) return;
+    clearSelection()
     const context = {};
     const startNode = nodes.find((node: AppNode) => node.type === 'start');
     if (!startNode) return;
@@ -107,17 +110,21 @@ export default function Controllers() {
   }
 
   return (
-    <Card className="absolute top-2 left-1/2 -translate-x-1/2 p-1 flex gap-1 z-50">
-      <UndoRedo/>
-      <NewNode />
-      <Button variant={'ghost'} size={'icon'} onClick={() => reactFlow.fitView({
-        padding: 0.3
-      })} >
-        <Scan/>
-      </Button>
-      <Toggle pressed={isRunning} onClick={isRunning ? stop : startWrapper}>
-        {isRunning ? <StopCircle size={20} /> : <PlayCircle size={20} />}
-      </Toggle>
-    </Card>
+    <>
+      <Card className="absolute top-2 left-1/2 -translate-x-1/2 p-1 flex gap-1 z-50">
+        <UndoRedo/>
+        <NewNode />
+        <Button toolTip="Fit in view" variant={'ghost'} size={'icon'} onClick={() => reactFlow.fitView({
+          padding: 0.3
+        })} >
+          <Scan/>
+        </Button>
+      </Card>
+      <div className={cn("rounded-full p-2 absolute right-2 bottom-2 z-50 shadow-md h-16 w-16 flex items-center justify-center", isRunning ? "bg-red-500" : "bg-green-500")} >
+        <Button className="rounded-full h-14 w-14 bg-transparent hover:bg-transparent p-2" variant="ghost" toolTip={isRunning ? "Stop" : "Play"} onClick={isRunning ? stop : startWrapper}>
+          {isRunning ? <StopCircle className="stroke-white" size={32} /> : <PlayCircle className="stroke-white" size={32} />}
+        </Button>
+      </div>
+    </>
   );
 }

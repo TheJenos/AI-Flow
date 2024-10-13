@@ -5,12 +5,14 @@ import Markdown from "react-markdown";
 
 export default function MarkdownViewer({text}: {text: string}) {
     return (
-        <div className='bg-accent p-2 text-xs rounded-md whitespace-pre-wrap max-h-28 overflow-y-auto relative'>
-            {text}
+        <div className='rounded-md relative'>
+            <div className="bg-accent p-2 text-xs rounded-md whitespace-pre-wrap max-h-28 overflow-y-auto border border-gray-300">
+                {text}
+            </div>
             <div className="absolute top-1 right-0">
                 <Dialog>
                     <DialogTrigger asChild>
-                        <Button variant="ghost" className="h-6 w-6" size="icon">
+                        <Button toolTip="Markdown Viewer" variant="ghost" className="h-6 w-6" size="icon">
                             <Maximize2 size={10} />
                         </Button>
                     </DialogTrigger>
@@ -23,7 +25,7 @@ export default function MarkdownViewer({text}: {text: string}) {
                                 <p className="text-sm text-gray-500">View the generated output in Markdown format for better readability and formatting options.</p>
                             </DialogDescription>
                         </DialogHeader>
-                        <Markdown className="border border-gray-500 p-3 h-[40vh] mx-h-[60vh] overflow-y-scroll rounded-md RichEditor-root">{text}</Markdown>
+                        <Markdown className="border border-gray-500 p-3 !h-[600px] !mx-h-[60vh] overflow-y-scroll rounded-md RichEditor-root">{text}</Markdown>
                         <DialogFooter>
                             <Button onClick={() => navigator.clipboard.writeText(text)}>Copy</Button>
                         </DialogFooter>

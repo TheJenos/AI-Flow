@@ -50,7 +50,7 @@ export default function Settings() {
         <Card className="absolute top-2 right-2 p-1 flex gap-2 z-50">
             <Dialog>
                 <DialogTrigger>
-                    <Button size="icon" variant="ghost">
+                    <Button toolTip="Settings" size="icon" variant="ghost">
                         <Bolt size={20} />
                     </Button>
                 </DialogTrigger>

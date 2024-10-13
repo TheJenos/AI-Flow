@@ -28,10 +28,10 @@ export default function UndoRedo() {
     }, [redo, undo])
 
     return <>
-     <Toggle onClick={() => undo()} disabled={pastStates.length == 0} >
+     <Toggle toolTip="Undo" onClick={() => undo()} disabled={pastStates.length == 0} >
         <Undo/>
       </Toggle>
-      <Toggle onClick={() => redo()} disabled={futureStates.length == 0} >
+      <Toggle toolTip="Redo" onClick={() => redo()} disabled={futureStates.length == 0} >
         <Redo/>
       </Toggle>
     </>

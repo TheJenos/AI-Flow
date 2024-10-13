@@ -85,7 +85,7 @@ export const Process = async (context: AppContext, node: AppNode<PromptData>, ne
 
     const client = isTestAPI ? OpenAiFaker() : OpenAi(token)
 
-    const otherPrompts = node.data.prompts
+    const otherPrompts = node.data.prompts || []
 
     const messages = [
         {
@@ -183,7 +183,7 @@ export const Properties = ({ node }: { node: AppNode<PromptData> }) => {
     };
 
     return (
-        <div className='flex flex-col gap-2 px-2'>
+        <div className='flex flex-col gap-3 px-3'>
             <div className='flex flex-col gap-1'>
                 <Label>Name</Label>
                 <Input
@@ -251,15 +251,15 @@ export const Properties = ({ node }: { node: AppNode<PromptData> }) => {
                         value={selectedType}
                         onValueChange={(e) => setSelectedType(e)}
                     >
-                        <SelectTrigger className='h-8'>
-                            <SelectValue className='w-full h-8' placeholder="Type" />
+                        <SelectTrigger>
+                            <SelectValue className='w-full' placeholder="Type" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="user">User</SelectItem>
                             <SelectItem value="assistant">Assistant</SelectItem>
                         </SelectContent>
                     </Select>
-                    <Button className='w-10 h-8' size={'icon'} type="submit">
+                    <Button className='w-10' size={'icon'} type="submit">
                         <Plus className='w-4 h-4' />
                     </Button>
                 </div>

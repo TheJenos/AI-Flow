@@ -4,7 +4,6 @@ import { nodeMap } from '@/lib/nodes';
 import { useFlowStore, useTemporalFlowStore } from '@/lib/store';
 import { Background, BackgroundVariant, MarkerType, ReactFlow } from '@xyflow/react';
 
-import '@xyflow/react/dist/style.css';
 import { useShallow } from 'zustand/shallow';
 import CustomEdge from '@/components/node_utils/custom_edge';
 import FlowContextMenu from '@/components/node_utils/flow_context_menu';
@@ -54,6 +53,7 @@ export default function Home() {
           }}
           maxZoom={1.5}
           onInit={() => clearHistory()}
+          deleteKeyCode={["Delete", "Backspace"]}
         >
           <Background variant={BackgroundVariant.Dots} gap={20} size={1} />
         </ReactFlow>

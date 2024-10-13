@@ -1,7 +1,7 @@
 import { CircleHelp, PenBox } from 'lucide-react';
 import { Card } from '../ui/card';
-import { AppContext, getNodeDetails, NodeMetaData } from '@/lib/nodes';
-import { useFlowStore, AppNode, AppNodeProp, useRuntimeStore } from '@/lib/store';
+import { AppContext, getNodeDetails, NodeConnectDisconnectPayload, NodeMetaData } from '@/lib/nodes';
+import { useFlowStore, AppNode, AppNodeProp, useRuntimeStore, UpdatePayload } from '@/lib/store';
 import { cloneDeep, get, set } from 'lodash';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
@@ -17,8 +17,19 @@ import { runStatement } from '@/lib/logics';
 import { Button } from '../ui/button';
 import ConditionEditorPopup from '../node_utils/condition_editor_popup';
 
-export const OnDisconnect = async (node: AppNode, otherNode: AppNode, updates: { [key: string]: unknown }) => {
-    set(updates, `${node.id}.decisions`, Object.fromEntries(Object.entries(node.data.decisions as object).filter(([key]) => key != otherNode.id)))
+export const OnConnect = async (payload: NodeConnectDisconnectPayload, updates: UpdatePayload) => {
+    const edge = payload.connectedEdge
+    if (!edge || payload.sourceNode.type != 'decision') return
+    updates.edges[edge.id] = {
+        animated: true,
+        label: 'Name and Condition required',
+        labelBgPadding: [5, 5]
+    }
+}
+
+export const OnDisconnect = async (payload: NodeConnectDisconnectPayload, updates: UpdatePayload) => {
+    if (payload.sourceNode.type != 'decision') return
+    set(updates, `nodes.${payload.sourceNode.id}.data.decisions.${payload.targetNode.id}`, null)
 }
 
 export const Metadata: NodeMetaData = {
@@ -26,6 +37,7 @@ export const Metadata: NodeMetaData = {
     name: 'Decision',
     description: 'A node that signifies a decision point in the flow. Only one condition will be effective even if multiple conditions are true.',
     tags: ['if', 'question', 'condition'],
+    OnConnect,
     OnDisconnect,
 }
 
@@ -120,7 +132,7 @@ export const Properties = ({ node }: { node: AppNode }) => {
     }
 
     return (
-        <div className='flex flex-col gap-2 px-2'>
+        <div className='flex flex-col gap-3 px-3'>
             <div className='flex flex-col gap-1'>
                 <Label>Name</Label>
                 <Input
@@ -130,51 +142,54 @@ export const Properties = ({ node }: { node: AppNode }) => {
                     onChange={(e) => setValue('name', e.target.value)}
                 />
             </div>
-            <Label>Decisions</Label>
-            {outgoers.length === 0 ? (
-                <div className="text-sm text-gray-500">No connections to Decisions block.</div>
-            ) : (
-                outgoers.map(({ oNode, oNodeDetails }, index) => (
-                    <Card key={index} className="flex flex-col pb-2 p-3 border-b border-gray-200">
-                        <span className='text-sm font-semibold'>{oNode.data.name ? `${oNode.data.name} (${oNodeDetails.name})` : `${oNodeDetails.name} (${oNode.id})`}</span>
+            <div>
+                <Label>Decisions</Label>
+                {outgoers.length === 0 ? (
+                    <div className="text-sm text-gray-500">No connections to Decisions block.</div>
+                ) : (
+                    outgoers.map(({ oNode, oNodeDetails }, index) => (
+                        <Card key={index} className="flex flex-col pb-2 p-3 border-b border-gray-200">
+                            <span className='text-sm font-semibold'>{oNode.data.name ? `${oNode.data.name} (${oNodeDetails.name})` : `${oNodeDetails.name} (${oNode.id})`}</span>
 
-                        {get(node, `data.decisions.${oNode.id}.type`) == 'else' ?
-                            (<div className='mt-2'>
-                                <Button className='w-full' onClick={() => clearElse(oNode.id)}>Unset else condition</Button>
-                            </div>)
-                            :
-                            (<>
-                                <div className="flex flex-col mb-1 gap-2 mt-2">
-                                    <Label className='text-sm'>Name</Label>
-                                    <Input
-                                        name="name"
-                                        disabled={get(node, `data.decisions.${oNode.id}.type`) == 'else'}
-                                        value={get(node, `data.decisions.${oNode.id}.name`, '')}
-                                        onChange={(e) => setNodeValue(oNode.id, 'name', e.target.value)}
-                                    />
-                                </div>
-                                <div className="flex flex-col mb-1 gap-2">
-                                    <Label className='text-sm'>Condition</Label>
-                                    <div className='flex gap-2'>
+                            {get(node, `data.decisions.${oNode.id}.type`) == 'else' ?
+                                (<div className='mt-2'>
+                                    <Button className='w-full' onClick={() => clearElse(oNode.id)}>Unset else condition</Button>
+                                </div>)
+                                :
+                                (<>
+                                    <div className="flex flex-col mb-1 gap-2 mt-2">
+                                        <Label className='text-sm'>Name</Label>
                                         <Input
-                                            name="condition"
-                                            readOnly
+                                            name="name"
                                             disabled={get(node, `data.decisions.${oNode.id}.type`) == 'else'}
-                                            value={get(node, `data.decisions.${oNode.id}.condition`, '')}
+                                            value={get(node, `data.decisions.${oNode.id}.name`, '')}
+                                            onChange={(e) => setNodeValue(oNode.id, 'name', e.target.value)}
                                         />
-                                        <Button size={'icon'} onClick={() => setConditionEditorNode({
-                                            nodeId: oNode.id,
-                                            condition: get(node, `data.decisions.${oNode.id}.condition`, '')
-                                        })}>
-                                            <PenBox size={16} />
-                                        </Button>
                                     </div>
-                                </div>
-                            </>)}
-                        {!alreadyHaveElse && (!get(node, `data.decisions.${oNode.id}.name`) && !get(node, `data.decisions.${oNode.id}.condition`)) ? <Button className='mt-2' variant={'ghost'} onClick={() => markAsElse(oNode.id)}>Set else condition</Button> : null}
-                    </Card>
-                ))
-            )}
+                                    <div className="flex flex-col mb-1 gap-2">
+                                        <Label className='text-sm'>Condition</Label>
+                                        <div className='flex gap-2'>
+                                            <Input
+                                                name="condition"
+                                                readOnly
+                                                disabled={get(node, `data.decisions.${oNode.id}.type`) == 'else'}
+                                                value={get(node, `data.decisions.${oNode.id}.condition`, '')}
+                                                valueHighlights
+                                            />
+                                            <Button toolTip="Condition Editor" size={'icon'} onClick={() => setConditionEditorNode({
+                                                nodeId: oNode.id,
+                                                condition: get(node, `data.decisions.${oNode.id}.condition`, '')
+                                            })}>
+                                                <PenBox size={16} />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </>)}
+                            {!alreadyHaveElse && (!get(node, `data.decisions.${oNode.id}.name`) && !get(node, `data.decisions.${oNode.id}.condition`)) ? <Button className='mt-2' variant={'ghost'} onClick={() => markAsElse(oNode.id)}>Set else condition</Button> : null}
+                        </Card>
+                    ))
+                )}
+            </div>
             <ConditionEditorPopup open={!!conditionEditorNode} value={conditionEditorNode?.condition} baseNode={node} onChange={(condition) => onChangeConditionEditorPopup(condition)} onClose={() => setConditionEditorNode(undefined)} />
         </div>
     )

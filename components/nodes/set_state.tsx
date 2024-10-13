@@ -1,5 +1,5 @@
-import { Captions } from 'lucide-react';
-import { AppContext, Controller, NodeLogViewProps, NodeMetaData, NodeOutput } from '@/lib/nodes';
+import { Cog } from 'lucide-react';
+import { AppContext, Controller, NodeMetaData, NodeOutput } from '@/lib/nodes';
 import { useFlowStore, AppNode, AppNodeProp, NodeData, useRuntimeStore } from '@/lib/store';
 import { cloneDeep, set } from 'lodash';
 import { Label } from '../ui/label';
@@ -11,57 +11,59 @@ import { cn } from '@/lib/utils';
 import NoteIcon from '../node_utils/node_icon';
 import { ThreadSourceHandle, ThreadTargetHandle } from '../node_utils/thread_handle';
 import DevMode from '../node_utils/dev_mode';
-import { replaceDynamicValueWithActual } from '@/lib/logics';
-import MarkdownViewer from '../ui/markdown_viewer';
+import { runStatement, validateStatement } from '@/lib/logics';
 
-type ConsoleLogData = NodeData & {
-    log: string
+type SetStateData = NodeData & {
+    variable: string
+    value: string
 }
 
 export const Metadata: NodeMetaData = {
-    type: 'console_log',
-    name: 'Console Log',
-    description: 'Logs messages to the console for debugging purposes',
-    tags: ['debug', 'log', 'console']
+    type: 'set_state',
+    name: 'Set State',
+    description: 'Sets the state of the node based on input values',
+    tags: ['state', 'set', 'node'],
+    valueIdentifier: () => "state"
 }
 
-export const Outputs = (node: AppNode<ConsoleLogData>) => {
+export const Outputs = (node: AppNode<SetStateData>) => {
     return {
         name: {
             title: 'Node name',
             description: 'Name used in the node',
             value: node.data.name
         },
-        log: {
-            title: 'Log statement',
-            description: 'statement used in the node',
-            value: node.data.log
-        },
+        ...(node.data.variable && node.data.value ? {
+            [node.data.variable]: {
+                title: 'Final Value',
+                description: 'final computed assigned value',
+                value: node.data.value
+            },
+        } : {}),
     } as NodeOutput
 }
 
-export function LogView({ payload }: NodeLogViewProps<string>) {
-    return <>
-        <MarkdownViewer text={payload} />
-    </>;
-}
+export const Process = async (context: AppContext, node: AppNode<SetStateData>, nextNodes: AppNode[], controller: Controller) => {
+    if (!node.data.variable || !node.data.value) return nextNodes
+    const isValidStatement = validateStatement(node.data.value)
+    if (!isValidStatement) throw Error("Value statement is invalid")
 
-export const Process = async (context: AppContext, node: AppNode<ConsoleLogData>, nextNodes: AppNode[], controller: Controller) => {
-    const output = replaceDynamicValueWithActual(node.data.log, context)
-    if (output) {
-        console.log(`Log:${node.id} `, output);
-        controller.log({
-            id: node.id,
-            type: 'success',
-            title: "Log has send to the browser console as well",
-            nodeType: node.type,
-            payload: output
-        });
-    }
+    const valueIdentifier = Metadata.valueIdentifier && Metadata.valueIdentifier(node) || ''
+    const output = runStatement(node.data.value, context)
+
+    set(context, `${valueIdentifier}.${node.data.variable}`, output)
+
+    controller.log({
+        id: node.id,
+        type: 'success',
+        title: "State value has been updated",
+        nodeType: node.type,
+        payload: `${node.data.variable} = ${output}`
+    });
     return nextNodes
 }
 
-export const Properties = ({ node }: { node: AppNode<ConsoleLogData> }) => {
+export const Properties = ({ node }: { node: AppNode<SetStateData> }) => {
     const updateNode = useFlowStore(state => state.updateNode);
 
     const setValue = (key: string, value: string) => {
@@ -69,6 +71,8 @@ export const Properties = ({ node }: { node: AppNode<ConsoleLogData> }) => {
         set(clonedNode, `data.${key}`, value);
         updateNode(clonedNode);
     }
+
+    const isValidCondition = useMemo(() => validateStatement(node.data.value),[node])
 
     return (
         <div className='flex flex-col gap-3 px-3'>
@@ -82,14 +86,24 @@ export const Properties = ({ node }: { node: AppNode<ConsoleLogData> }) => {
                 />
             </div>
             <div className='flex flex-col gap-1'>
-                <Label className='text-sm font-semibold' htmlFor="log">Log</Label>
+                <Label htmlFor="variable">Variable Name</Label>
+                <Input
+                    id='variable'
+                    name="variable"
+                    value={node.data.variable}
+                    placeholder={"Variable name"}
+                    onChange={(e) => setValue('variable', e.target.value)}
+                />
+            </div>
+            <div className='flex flex-col gap-1'>
+                <Label className='text-sm font-semibold' htmlFor="value">Value <span className={isValidCondition ? 'text-green-600': 'text-red-600'}>{isValidCondition ? '(Valid)' : '(Invalid)'}</span></Label>
                 <Textarea
-                    id="log"
-                    name="log"
-                    value={node.data.log}
-                    className='h-20'
-                    placeholder='Enter your statement here...'
-                    onChange={(e) => setValue('log', e.target.value)}
+                    id="value"
+                    name="value"
+                    value={node.data.value}
+                    classNameFrame={cn('h-20', isValidCondition ? 'outline !outline-green-600': 'outline !outline-red-600')}
+                    placeholder='Enter your value statement here...'
+                    onChange={(e) => setValue('value', e.target.value)}
                     node={node}
                     withoutRichText
                 />
@@ -127,7 +141,7 @@ export function Node({ id, selectable, isConnectable, data }: AppNodeProp) {
         <div className={cn(noteStateVariants({ state }))}>
             <ThreadTargetHandle active={isConnectable} />
             <div className='flex gap-2'>
-                <NoteIcon state={state} idleIcon={Captions} />
+                <NoteIcon state={state} idleIcon={Cog} />
                 <span className='text-sm font-semibold'>{name}</span>
             </div>
             <DevMode data={data} />

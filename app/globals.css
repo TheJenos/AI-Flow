@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -61,9 +63,12 @@
 @layer base {
   * {
     @apply border-border;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Poppins', Tahoma, Geneva, Verdana, sans-serif;
   }
 }
 
@@ -112,17 +117,25 @@
   @apply text-base mb-4;
 }
 
-.RichEditor-root {
-  @apply bg-white border border-gray-300 text-sm;
+.RichEditor-editor {
+  @apply border-t border-gray-300 cursor-text text-base h-[60vh] overflow-y-auto;
 }
 
-.RichEditor-editor {
-  @apply border-t border-gray-300 cursor-text text-base h-[60vh] overflow-y-auto px-3;
+.RichEditor-root {
+  @apply bg-white border border-gray-300 text-sm h-full;
+}
+
+.RichEditor-editor .DraftEditor-root {
+  @apply h-full;
+}
+
+.RichEditor-editor .public-DraftEditor-content {
+  @apply w-full;
 }
 
 .RichEditor-editor .public-DraftEditorPlaceholder-root,
 .RichEditor-editor .public-DraftEditor-content {
-  @apply -mx-4 -mb-4 p-4;
+  @apply p-3;
 }
 
 .RichEditor-editor .public-DraftEditor-content {
@@ -151,4 +164,12 @@
 
 .RichEditor-activeButton {
   @apply text-blue-500;
+}
+
+.react-flow__edge-textbg {
+  @apply fill-white rounded-full stroke-black p-2 m-2
+}
+
+.react-flow__edge-text {
+  @apply fill-black m-2 p-2 text-xs
 }

@@ -47,7 +47,7 @@ export default function NewNode() {
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger>
-                <Toggle pressed={open}>
+                <Toggle toolTip="Add Nodes" pressed={open}>
                     <Plus size={20} />
                 </Toggle>
             </PopoverTrigger>
@@ -69,7 +69,7 @@ export default function NewNode() {
                                     className="flex flex-col gap-2 p-2 items-stretch rounded-md cursor-pointer hover:bg-gray-100 transition-colors duration-200"
                                     onClick={() => handleNodeClick(node)}
                                 >
-                                    <div className="flex items-center justify-center p-5 w-full bg-accent">
+                                    <div className="flex items-center justify-center p-5 w-full bg-accent border border-gray-300 rounded-md">
                                       <Node id={''} data={{state: 'idle',thread: 'main'}} dragging={false} isConnectable={false} positionAbsoluteX={0} positionAbsoluteY={0} type={''} zIndex={0} />
                                     </div>
                                     <div className="flex flex-col py-2">

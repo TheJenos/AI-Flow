@@ -1,7 +1,7 @@
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Background, BackgroundVariant, getIncomers, MarkerType, NodeChange, NodeSelectionChange, ReactFlow, ReactFlowProvider } from "@xyflow/react";
 import CustomEdge from "./custom_edge";
-import { getNodeDetails, NodeDetails, NodeOutput, nodeMap } from "@/lib/nodes";
+import { getNodeDetails, NodeDetails, NodeOutput, nodeMap, NodeMetaData } from "@/lib/nodes";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AppNode, useFlowStore } from "@/lib/store";
 import { useShallow } from "zustand/shallow";
@@ -68,16 +68,9 @@ export default function ConditionEditorPopup({ baseNode, open, value, onChange, 
         }
     }
 
-    const addDynamicValue = (nodeId: string, key: string) => {
-        const input = textRef.current
-        if (!input) return
-        setCondition(x => {
-            const textToInsert =  `{${nodeId}.${key}}`
-            const cursorPosition = input.selectionStart || x.length
-            const textBeforeCursorPosition = x.substring(0, cursorPosition)
-            const textAfterCursorPosition = x.substring(cursorPosition, x.length)
-            return `${textBeforeCursorPosition}${textToInsert}${textAfterCursorPosition}`
-        });
+    const addDynamicValue = (node: AppNode, details: NodeMetaData, key: string) => {
+        const valueIdentifier = details.valueIdentifier && details.valueIdentifier(node) || node.id
+        setCondition(x => `${x}{${valueIdentifier}.${key}}`);
     }
 
     const isValidCondition = useMemo(() => validateStatement(condition),[condition])
@@ -130,7 +123,7 @@ export default function ConditionEditorPopup({ baseNode, open, value, onChange, 
                         </ReactFlowProvider>
                     </ResizablePanel>
                     <ResizableHandle />
-                    <ResizablePanel maxSize={40} defaultSize={40} minSize={25}>
+                    <ResizablePanel maxSize={40} defaultSize={40} minSize={40}>
                         <div className="flex justify-center items-center h-full">
                             {selectedNode ? (
                                 <div className="h-full">
@@ -144,7 +137,7 @@ export default function ConditionEditorPopup({ baseNode, open, value, onChange, 
                                             </div>
                                         </div>
                                     </div>
-                                    <div>
+                                    <div className="h-full overflow-y-auto">
                                         {Object.keys(selectedNode.outputs).map(x => (
                                             <div key={x} className="flex items-center justify-between p-2 border-b border-gray-200">
                                                 <div>
@@ -152,7 +145,7 @@ export default function ConditionEditorPopup({ baseNode, open, value, onChange, 
                                                     {selectedNode.outputs[x].description ? <p className="text-xs text-gray-500">{selectedNode.outputs[x].description}</p> : null}
                                                     {selectedNode.outputs[x].value ? <p className="text-xs text-gray-500">Current : {trimStrings(selectedNode.outputs[x].value.toString())}</p> : null}
                                                 </div>
-                                                <Button size="icon" variant="ghost" onClick={() => addDynamicValue(selectedNode.node.id,x)} ><Plus /></Button>
+                                                <Button size="icon" variant="ghost" onClick={() => addDynamicValue(selectedNode.node, selectedNode.nodeDetails,x)} ><Plus /></Button>
                                             </div>
                                         ))}
                                     </div>
@@ -165,8 +158,8 @@ export default function ConditionEditorPopup({ baseNode, open, value, onChange, 
                 </ResizablePanelGroup>
                 <DialogFooter className="items-end">
                     <div className="w-full">
-                        <Label>Condition {isValidCondition ? '(Valid)' : '(Invalid)'}</Label>
-                        <Input ref={textRef} className={cn('mt-2', isValidCondition ? 'outline !outline-green-600': 'outline !outline-red-600')} value={condition} onChange={(e) => setCondition(e.target.value)} />
+                        <Label>Condition <span className={isValidCondition ? 'text-green-600': 'text-red-600'}>{isValidCondition ? '(Valid)' : '(Invalid)'}</span></Label>
+                        <Input className={cn('mt-2', isValidCondition ? 'outline !outline-green-600': 'outline !outline-red-600')} valueHighlights value={condition} onChange={(e) => setCondition(e.target.value)} />
                     </div>
                     <DialogClose asChild>
                         <Button disabled={!isValidCondition} onClick={() => isValidCondition ? onChange(condition) : null}>Set Condition</Button>
