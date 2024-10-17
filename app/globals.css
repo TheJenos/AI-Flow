@@ -67,7 +67,7 @@
     -moz-osx-font-smoothing: grayscale;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground overflow-hidden;
     font-family: 'Poppins', Tahoma, Geneva, Verdana, sans-serif;
   }
 }

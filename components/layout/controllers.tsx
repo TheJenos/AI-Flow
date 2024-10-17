@@ -1,7 +1,7 @@
 import NewNode from "../node_utils/new_node";
 import { Card } from "../ui/card";
 import { Toggle } from "../ui/toggle";
-import { PlayCircle, Scan, StopCircle } from "lucide-react";
+import { Play, PlayCircle, Scan, Square, StopCircle } from "lucide-react";
 import { useShallow } from "zustand/shallow";
 import { AppContext, Controller, getNodeDetails, NodeState } from "@/lib/nodes";
 import { getOutgoers, useReactFlow } from "@xyflow/react";
@@ -122,7 +122,7 @@ export default function Controllers() {
       </Card>
       <div className={cn("rounded-full p-2 absolute right-2 bottom-2 z-50 shadow-md h-16 w-16 flex items-center justify-center", isRunning ? "bg-red-500" : "bg-green-500")} >
         <Button className="rounded-full h-14 w-14 bg-transparent hover:bg-transparent p-2" variant="ghost" toolTip={isRunning ? "Stop" : "Play"} onClick={isRunning ? stop : startWrapper}>
-          {isRunning ? <StopCircle className="stroke-white" size={32} /> : <PlayCircle className="stroke-white" size={32} />}
+          {isRunning ? <Square className="stroke-white" size={32} /> : <Play className="stroke-white" size={32} />}
         </Button>
       </div>
     </>

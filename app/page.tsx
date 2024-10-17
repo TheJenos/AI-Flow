@@ -46,7 +46,7 @@ export default function Home() {
             }
           }}
           snapToGrid
-          snapGrid={[20, 20]}
+          snapGrid={[10, 10]}
           fitView
           fitViewOptions={{
             padding: 0.3

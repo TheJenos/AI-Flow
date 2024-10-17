@@ -67,12 +67,13 @@ export type NodeConnectDisconnectPayload = {
 }
 export type NodeOnConnectDisconnect = (payload: NodeConnectDisconnectPayload, updates: UpdatePayload) => Promise<void>
 
-export type NodeMetaData = {
+export type NodeMetaData<T = unknown> = {
     type: NodeType;
     name: string;
     description: string;
     tags: string[],
     notAddable?: boolean;
+    defaultData?: T,
     valueIdentifier?: (node: AppNode) => string;
     OnConnect?: NodeOnConnectDisconnect;
     OnDisconnect?: NodeOnConnectDisconnect;

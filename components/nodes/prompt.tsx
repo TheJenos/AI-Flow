@@ -18,6 +18,7 @@ import { ChatCompletion, Message, modelDetails, OpenAi, OpenAiFaker, openAiToken
 import { replaceDynamicValueWithActual } from '@/lib/logics';
 import { Stats } from '../node_utils/stats';
 import MarkdownViewer from '../ui/markdown_viewer';
+import { Slider } from '../ui/slider';
 
 type PromptData = NodeData & {
     model: string,
@@ -139,7 +140,7 @@ export const Properties = ({ node }: { node: AppNode<PromptData> }) => {
     const [deletePrompt, setDeletePrompt] = useState<number>();
     const [prompts, setPrompts] = useState(node.data.prompts || []);
 
-    const setValue = (key: string, value: string) => {
+    const setValue = (key: string, value: string | number) => {
         const clonedNode = cloneDeep(node);
         set(clonedNode, `data.${key}`, value);
         updateNode(clonedNode);
@@ -205,6 +206,31 @@ export const Properties = ({ node }: { node: AppNode<PromptData> }) => {
                         ))}
                     </SelectContent>
                 </Select>
+            </div>
+            <div className='flex flex-col gap-1'>
+                <Label className='text-sm font-semibold flex'>Response Format</Label>
+                <Select
+                    name='type'
+                    required
+                    value={node.data.response_format as string || 'text'}
+                    onValueChange={(e) => setValue('response_format', e)}
+                >
+                    <SelectTrigger>
+                        <SelectValue className='w-full' placeholder="Response Format" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="text">Text</SelectItem>
+                        <SelectItem value="json_object">JSON Object</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className='flex flex-col gap-1'>
+                <Label className='text-sm font-semibold flex'>Temperature <div className='ml-auto'>{node.data.temperature as string || 1}</div></Label>
+                <Slider defaultValue={[node.data.temperature as number || 1]} max={2} min={0} step={0.01} onValueChange={(e) => setValue('temperature', e[0])} />
+            </div>
+            <div className='flex flex-col gap-1'>
+                <Label className='text-sm font-semibold flex'>Top P <div className='ml-auto'>{node.data.top_p as string || 1}</div></Label>
+                <Slider defaultValue={[node.data.top_p as number || 1]} max={1} min={0} step={0.01} onValueChange={(e) => setValue('top_p', e[0])} />
             </div>
             <div className='flex flex-col gap-1'>
                 <Label className='text-sm font-semibold' htmlFor="system_prompt">System Prompt</Label>

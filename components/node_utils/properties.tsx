@@ -1,6 +1,7 @@
 import { getNodeDetails } from "@/lib/nodes";
 import { useFlowStore, useSettingStore } from "@/lib/store"
 import { useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 export default function Properties() {
     const selectedNode = useFlowStore((state) => state.selectedNode)
@@ -31,13 +32,14 @@ export default function Properties() {
                         <span className="font-semibold">Node ID : </span>
                         <p className="text-gray-500">{selectedNode.id}</p>
                     </div>
-                    {isDevMode?.showPropData ? <div className="flex flex-col gap-2 text-xs">
-                        <span className="font-semibold">Data : </span>
-                        <p className="text-gray-500 whitespace-pre">{JSON.stringify(selectedNode.data, null, 4)}</p>
-                    </div> : null } 
+
                 </div>
             </div>
             <div className="flex-1 overflow-y-auto py-3">
+                {isDevMode?.showPropData ? <div className="px-2 pb-2"><Card className="p-2">
+                    <CardTitle className="text-sm">Node Data</CardTitle>
+                    <p className="text-gray-500 whitespace-pre-wrap text-xs mt-2">{JSON.stringify(selectedNode.data, null, 4)}</p>
+                </Card></div> : null}
                 {PropertiesComponent && <PropertiesComponent key={selectedNode.id} node={selectedNode} />}
             </div>
         </div>

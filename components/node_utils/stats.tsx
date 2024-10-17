@@ -37,7 +37,7 @@ export function Stats({ startTime, endTime, inToken, outToken, amount }: StatsPr
     return (
         <div className="mt-3">
             {isTestAPI ? <span className="font-bold text-red-600 text-xs">Currently you are using Test API</span> : null}
-            <div className="flex gap-2 items-center justify-between text-xs bg-accent p-2 rounded-md flex-wrap border border-gray-300">
+            <div className="grid sm:grid-cols-3 xl:grid-cols-5 gap-2 text-xs bg-accent p-2 rounded-md flex-wrap border border-gray-300">
                 <div className="flex items-center gap-1"><MoveUp size={16} /> {inToken}</div>
                 <div className="flex items-center gap-1"><MoveDown size={16} /> {outToken}</ div>
                 <div className="flex items-center gap-1"><ArrowUpDown size={16} /> {inToken + outToken}</ div>
