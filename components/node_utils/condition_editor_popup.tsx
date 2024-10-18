@@ -2,7 +2,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Background, BackgroundVariant, getIncomers, MarkerType, NodeChange, NodeSelectionChange, ReactFlow, ReactFlowProvider } from "@xyflow/react";
 import CustomEdge from "./custom_edge";
 import { getNodeDetails, NodeDetails, NodeOutput, nodeMap, NodeMetaData } from "@/lib/nodes";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppNode, useFlowStore } from "@/lib/store";
 import { useShallow } from "zustand/shallow";
 import { Button } from "../ui/button";
@@ -15,7 +15,6 @@ import { validateStatement } from "@/lib/logics";
 
 export default function ConditionEditorPopup({ baseNode, open, value, onChange, onClose }: { baseNode: AppNode, open: boolean, value?: string, onChange: (condition: string) => void, onClose: () => void }) {
     const [condition, setCondition] = useState<string>(value || '')
-    const textRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
       setCondition(value || '')

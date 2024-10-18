@@ -19,6 +19,7 @@ import { replaceDynamicValueWithActual } from '@/lib/logics';
 import { Stats } from '../node_utils/stats';
 import MarkdownViewer from '../ui/markdown_viewer';
 import { Slider } from '../ui/slider';
+import SchemaEditor, { SchemaType } from '../ui/schema_editor';
 
 type PromptData = NodeData & {
     model: string,
@@ -67,7 +68,7 @@ export const Outputs = (node: AppNode<PromptData>, extra: OutputExtra) => {
         },
         assistant_output: {
             title: 'Assistant Output',
-            description: 'Assistant output that getting from the reponse',
+            description: 'Assistant output that getting from the response',
             value: extra.assistant_output
         },
     } as NodeOutput
@@ -140,7 +141,7 @@ export const Properties = ({ node }: { node: AppNode<PromptData> }) => {
     const [deletePrompt, setDeletePrompt] = useState<number>();
     const [prompts, setPrompts] = useState(node.data.prompts || []);
 
-    const setValue = (key: string, value: string | number) => {
+    const setValue = (key: string, value: string | number | SchemaType) => {
         const clonedNode = cloneDeep(node);
         set(clonedNode, `data.${key}`, value);
         updateNode(clonedNode);
@@ -221,9 +222,14 @@ export const Properties = ({ node }: { node: AppNode<PromptData> }) => {
                     <SelectContent>
                         <SelectItem value="text">Text</SelectItem>
                         <SelectItem value="json_object">JSON Object</SelectItem>
+                        <SelectItem value="json_schema">JSON Schema</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
+            {node.data.response_format == 'json_schema' ? <div className='flex flex-col gap-1'>
+                <Label className='text-sm font-semibold flex'>JSON Schema</Label>
+                <SchemaEditor defaultValue={node.data.response_schema as SchemaType} onSave={(e) => setValue('response_schema', e)} />
+            </div> : null }
             <div className='flex flex-col gap-1'>
                 <Label className='text-sm font-semibold flex'>Temperature <div className='ml-auto'>{node.data.temperature as string || 1}</div></Label>
                 <Slider defaultValue={[node.data.temperature as number || 1]} max={2} min={0} step={0.01} onValueChange={(e) => setValue('temperature', e[0])} />

@@ -12,11 +12,12 @@ import { headlights } from "@/lib/logics"
 
 export type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
   node?: AppNode
+  withoutHighlights?: boolean
   withoutRichText?: boolean
   classNameFrame?: string
 }
 
-export function Textarea({ className, classNameFrame, withoutRichText, node, value, onChange }: TextareaProps) {
+export function Textarea({ className, classNameFrame, withoutRichText, withoutHighlights, node, value, onChange }: TextareaProps) {
   const [openValueSelector, setOpenValueSelector] = useState(false)
 
   const [key, setKey] = useState(Math.random() * 1000)
@@ -40,15 +41,15 @@ export function Textarea({ className, classNameFrame, withoutRichText, node, val
       /> */}
       <div className={cn(
           "flex justify-stretch items-stretch min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 h-20 overflow-y-scroll w-full p-2",
-          "[&_div]:h-full [&_.DraftEditor-root]:flex-1", //tw
+          "[&>div]:h-full [&_.DraftEditor-root]:flex-1", //tw
           className
         )}>
-        <HighlightWithinTextarea highlight={headlights} value={value?.toString() || ''} onChange={(value) => onChange && onChange({ target: {value}} as  ChangeEvent<HTMLTextAreaElement>)} />
+        <HighlightWithinTextarea highlight={!withoutHighlights && headlights} value={value?.toString() || ''} onChange={(value) => onChange && onChange({ target: {value}} as  ChangeEvent<HTMLTextAreaElement>)} />
       </div>
-      <div className="absolute -top-12 right-2 flex gap-1 p-1 bg-gray-200 rounded-md transition-all duration-100 group-hover:top-1 z-10">
-        <Button toolTip="Value Selector" size="icon" variant="ghost" className="h-6 w-6" onClick={() => setOpenValueSelector(true)}>
+     {node && !withoutRichText  ? <div className="absolute -top-12 right-2 flex gap-1 p-1 bg-gray-200 rounded-md transition-all duration-100 group-hover:top-1 z-10">
+        {node ? <Button toolTip="Value Selector" size="icon" variant="ghost" className="h-6 w-6" onClick={() => setOpenValueSelector(true)}>
           <Route size={16} />
-        </Button>
+        </Button> : null }
         {!withoutRichText ? <Dialog>
           <DialogTrigger asChild>
             <Button toolTip="Rich Editor" variant="ghost" className="h-6 w-6" size="icon">
@@ -68,7 +69,8 @@ export function Textarea({ className, classNameFrame, withoutRichText, node, val
               key={key}
               initialContent={value?.toString() || ''}
               onChange={(value) => onChange && onChange({ target: {value}} as  ChangeEvent<HTMLTextAreaElement>)}
-              extraToolButtons={(
+              withoutHighlights={withoutHighlights}
+              extraToolButtons={node && (
                 <Button size="icon" variant="ghost" onClick={() => setOpenValueSelector(true)}>
                   <Route size={16} />
                 </Button>
@@ -88,11 +90,20 @@ export function Textarea({ className, classNameFrame, withoutRichText, node, val
             </DialogFooter>
           </DialogContent>
         </Dialog> : null}
-      </div>
-      {node ? <ValueSelectorPopup open={openValueSelector} baseNode={node} onSelect={(s) => {
-        onChange && onChange({ target: {value: value + s}} as  ChangeEvent<HTMLTextAreaElement>)
-        setOpenValueSelector(false)
-      }} onClose={() => setOpenValueSelector(false)} /> : null}
+      </div> : null }
+      {node ? (
+        <ValueSelectorPopup
+          open={openValueSelector}
+          baseNode={node}
+          onSelect={(s) => {
+            if (onChange) {
+              onChange({ target: { value: value + s } } as ChangeEvent<HTMLTextAreaElement>);
+            }
+            setOpenValueSelector(false);
+          }}
+          onClose={() => setOpenValueSelector(false)}
+        />
+      ) : null}
     </div>
   )
 }

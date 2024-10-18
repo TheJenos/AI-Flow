@@ -1,7 +1,7 @@
 import { getNodeDetails } from "@/lib/nodes";
 import { useFlowStore, useSettingStore } from "@/lib/store"
 import { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Card, CardTitle } from "../ui/card";
 
 export default function Properties() {
     const selectedNode = useFlowStore((state) => state.selectedNode)

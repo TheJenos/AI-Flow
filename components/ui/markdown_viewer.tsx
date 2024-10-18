@@ -9,7 +9,7 @@ export default function MarkdownViewer({text}: {text: string}) {
             <div className="bg-accent p-2 text-xs rounded-md whitespace-pre-wrap max-h-28 overflow-y-auto border border-gray-300">
                 {text}
             </div>
-            <div className="absolute top-1 right-0">
+            <div className="absolute top-1 right-1">
                 <Dialog>
                     <DialogTrigger asChild>
                         <Button toolTip="Markdown Viewer" variant="ghost" className="h-6 w-6" size="icon">

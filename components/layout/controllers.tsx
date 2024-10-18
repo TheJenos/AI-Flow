@@ -1,7 +1,6 @@
 import NewNode from "../node_utils/new_node";
 import { Card } from "../ui/card";
-import { Toggle } from "../ui/toggle";
-import { Play, PlayCircle, Scan, Square, StopCircle } from "lucide-react";
+import { Play, Scan, Square } from "lucide-react";
 import { useShallow } from "zustand/shallow";
 import { AppContext, Controller, getNodeDetails, NodeState } from "@/lib/nodes";
 import { getOutgoers, useReactFlow } from "@xyflow/react";
@@ -115,7 +114,8 @@ export default function Controllers() {
         <UndoRedo/>
         <NewNode />
         <Button toolTip="Fit in view" variant={'ghost'} size={'icon'} onClick={() => reactFlow.fitView({
-          padding: 0.3
+          padding: 0.3,
+          duration: 300
         })} >
           <Scan/>
         </Button>

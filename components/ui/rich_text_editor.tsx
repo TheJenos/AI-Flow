@@ -87,9 +87,10 @@ interface RichTextEditorProps {
   initialContent?: string;
   onChange?: (content: string) => void;
   extraToolButtons?: React.JSX.Element
+  withoutHighlights?: boolean
 }
 
-function RichTextEditor({ initialContent, onChange, extraToolButtons }: RichTextEditorProps) {
+function RichTextEditor({ initialContent, onChange, extraToolButtons, withoutHighlights }: RichTextEditorProps) {
   const [editorState, setEditorState] = useState(() => {
     if (initialContent) {
       const contentState = convertFromRaw(markdownToDraft(initialContent));
@@ -165,13 +166,16 @@ function RichTextEditor({ initialContent, onChange, extraToolButtons }: RichText
     }
   }
 
+  let newEditorState = editorState
   const decoratorFactory = useRef(new DecoratorFactory()).current;
-  const decorator = decoratorFactory.create(contentState, headlights);
-
-  const newEditorState = EditorState.set(editorState, {
-    decorator: decorator,
-  });
-
+  if (!withoutHighlights) {
+    const decorator = decoratorFactory.create(contentState, headlights);
+    
+    newEditorState = EditorState.set(editorState, {
+      decorator: decorator,
+    });
+  }
+    
   return (
     <div className="RichEditor-root">
       <BlockStyleControls

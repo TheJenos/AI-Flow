@@ -6,10 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint --fix"
   },
   "dependencies": {
     "@krhsiung/react-flow-smart-edge": "^3.0.2",
+    "@monaco-editor/react": "^4.6.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
     "@radix-ui/react-context-menu": "^2.2.2",
     "@radix-ui/react-dialog": "^1.1.1",
