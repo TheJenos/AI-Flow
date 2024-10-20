@@ -1,7 +1,7 @@
 import { Plus, ScrollText, Trash } from 'lucide-react';
 import { AppContext, NodeMetaData, NodeOutput, OutputExtra, Controller, NodeLogViewProps } from '@/lib/nodes';
 import { useFlowStore, AppNode, AppNodeProp, NodeData, useSettingStore, useRuntimeStore } from '@/lib/store';
-import { cloneDeep, set } from 'lodash';
+import { capitalize, cloneDeep, set } from 'lodash';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -20,11 +20,24 @@ import { Stats } from '../node_utils/stats';
 import MarkdownViewer from '../ui/markdown_viewer';
 import { Slider } from '../ui/slider';
 import SchemaEditor, { SchemaType } from '../ui/schema_editor';
+import { AxiosError } from 'axios';
 
 type PromptData = NodeData & {
-    model: string,
+    model: string
     system_prompt: string
     prompts: Message[]
+    response_format: 'text' | 'json_object' | 'json_schema'
+    response_schema: {
+        schema: {
+            properties: {
+                [key: string]: {
+                    title: string
+                    description: string
+                }
+            }
+        }
+    },
+    test_output?: string
 }
 
 export const Metadata: NodeMetaData = {
@@ -50,7 +63,7 @@ export function LogView({ payload }: NodeLogViewProps<LogViewPayload>) {
 }
 
 export const Outputs = (node: AppNode<PromptData>, extra: OutputExtra) => {
-    return {
+    const outputs = {
         name: {
             title: 'Node name',
             description: 'Name used in the node',
@@ -66,12 +79,32 @@ export const Outputs = (node: AppNode<PromptData>, extra: OutputExtra) => {
             description: 'System prompt used in the node',
             value: node.data.system_prompt
         },
-        assistant_output: {
-            title: 'Assistant Output',
-            description: 'Assistant output that getting from the response',
-            value: extra.assistant_output
+        assistant_raw_output: {
+            title: 'Assistant Raw Output',
+            description: 'Raw assistant output that getting from the response',
+            value: extra.assistant_raw_output
         },
     } as NodeOutput
+
+    if (node.data.response_format == 'json_schema') {
+        const props = node.data.response_schema?.schema.properties || {}
+
+        outputs['assistant_json_output'] = {
+            title: 'Assistant Json Output',
+            description: 'JSON formatted output from the assistant',
+            value: extra.assistant_json_output as string
+        }
+
+        for (const key in props) {
+            outputs[`assistant_json_output.${key}`] = {
+                title: props[key].title as unknown as string || `${capitalize(key)} Value`,
+                description: props[key].description as unknown as string || 'This value will set from the output structure',
+                value: extra.assistant_json_output ? (extra.assistant_json_output as Record<string, unknown>)[key] as string : undefined
+            }
+        }
+    }
+
+    return outputs
 }
 
 export const Process = async (context: AppContext, node: AppNode<PromptData>, nextNodes: AppNode[], controller: Controller) => {
@@ -79,13 +112,20 @@ export const Process = async (context: AppContext, node: AppNode<PromptData>, ne
     const isTestAPI = useSettingStore.getState().devMode?.testOpenAPI || false
     if (!isTestAPI && !token) throw Error("You need to add OpenAI Token in the setting to continue or you can use test api on dev mode for testing")
 
+    const test_output = node.data.test_output
+    if (isTestAPI && !test_output) throw Error("Test Output is required")
+
     const model = node.data.model
     if (!model) throw Error("Model type is required")
 
     const systemPrompt = node.data.system_prompt
     if (!systemPrompt) throw Error("System prompt is required")
 
-    const client = isTestAPI ? OpenAiFaker() : OpenAi(token)
+    const response_format = node.data.response_format
+    const response_schema = node.data.response_schema
+    if (response_format && response_format == 'json_schema' && !response_schema) throw Error("Output structure is required")
+
+    const client = isTestAPI ? OpenAiFaker(test_output) : OpenAi(token)
 
     const otherPrompts = node.data.prompts || []
 
@@ -99,16 +139,29 @@ export const Process = async (context: AppContext, node: AppNode<PromptData>, ne
 
     const startTime = new Date().getTime();
 
-    const response = await client.chat({
-        model,
-        messages: messages.map(x => ({
-            ...x,
-            content: replaceDynamicValueWithActual(x.content || '', context)
-        }))
-    })
+    let response = null
+    try {
+        response = await client.chat({
+            model,
+            temperature: node.data.temperature as number || 1,
+            top_p: node.data.top_p as number || 1,
+            messages: messages.map(x => ({
+                ...x,
+                content: replaceDynamicValueWithActual(x.content || '', context)
+            })),
+            response_format: { type: response_format || 'text', json_schema: response_schema }
+        })
+    } catch (error) {
+        if (error instanceof AxiosError && error.response?.data?.error?.message) {
+            throw new Error(error.response?.data?.error?.message);
+        } else {
+            throw error;
+        }
+    }
 
     const endTime = new Date().getTime();
     const amount = openAiTokenToCost(response.data.usage.total_tokens, model)
+    const output = response.data.choices[0].message.content
 
     controller.log({
         id: node.id,
@@ -116,7 +169,7 @@ export const Process = async (context: AppContext, node: AppNode<PromptData>, ne
         title: "Request successfully executed",
         nodeType: node.type,
         payload: {
-            assistant_output: response.data.choices[0].message.content,
+            assistant_output: (response_format || 'text') != 'text' ? JSON.stringify(JSON.parse(output || '{}'), null, 2) : output,
             usage: response.data.usage,
             amount,
             startTime,
@@ -129,13 +182,15 @@ export const Process = async (context: AppContext, node: AppNode<PromptData>, ne
     controller.increaseAmount(amount)
 
     context[node.id] = Object.fromEntries(Object.entries(Outputs(node, {
-        assistant_output: response.data.choices[0].message.content
+        assistant_output: output,
+        assistant_json_output: (response_format || 'text') != 'text' ? JSON.parse(output || '{}') : undefined
     })).map(([key, value]) => [key, value.value]))
 
     return nextNodes
 }
 
 export const Properties = ({ node }: { node: AppNode<PromptData> }) => {
+    const isTestAPI = useSettingStore((s) => s.devMode?.testOpenAPI || false)
     const updateNode = useFlowStore(state => state.updateNode);
     const [selectedType, setSelectedType] = useState<string>();
     const [deletePrompt, setDeletePrompt] = useState<number>();
@@ -227,16 +282,16 @@ export const Properties = ({ node }: { node: AppNode<PromptData> }) => {
                 </Select>
             </div>
             {node.data.response_format == 'json_schema' ? <div className='flex flex-col gap-1'>
-                <Label className='text-sm font-semibold flex'>JSON Schema</Label>
+                <Label className='text-sm font-semibold flex'>Output structure</Label>
                 <SchemaEditor defaultValue={node.data.response_schema as SchemaType} onSave={(e) => setValue('response_schema', e)} />
-            </div> : null }
+            </div> : null}
             <div className='flex flex-col gap-1'>
-                <Label className='text-sm font-semibold flex'>Temperature <div className='ml-auto'>{node.data.temperature as string || 1}</div></Label>
-                <Slider defaultValue={[node.data.temperature as number || 1]} max={2} min={0} step={0.01} onValueChange={(e) => setValue('temperature', e[0])} />
+                <Label className='text-sm font-semibold flex'>Temperature <div className='ml-auto'>{node.data.temperature === undefined ? 1 : node.data.temperature as string }</div></Label>
+                <Slider defaultValue={[node.data.temperature === undefined ? 1 : node.data.temperature as number]} max={2} min={0} step={0.01} onValueChange={(e) => setValue('temperature', e[0])} />
             </div>
             <div className='flex flex-col gap-1'>
-                <Label className='text-sm font-semibold flex'>Top P <div className='ml-auto'>{node.data.top_p as string || 1}</div></Label>
-                <Slider defaultValue={[node.data.top_p as number || 1]} max={1} min={0} step={0.01} onValueChange={(e) => setValue('top_p', e[0])} />
+                <Label className='text-sm font-semibold flex'>Top P <div className='ml-auto'>{node.data.top_p === undefined ? 1 : node.data.top_p as string}</div></Label>
+                <Slider defaultValue={[node.data.top_p === undefined ? 1 : node.data.top_p as number]} max={1} min={0} step={0.01} onValueChange={(e) => setValue('top_p', e[0])} />
             </div>
             <div className='flex flex-col gap-1'>
                 <Label className='text-sm font-semibold' htmlFor="system_prompt">System Prompt</Label>
@@ -296,6 +351,20 @@ export const Properties = ({ node }: { node: AppNode<PromptData> }) => {
                     </Button>
                 </div>
             </form>
+            {isTestAPI ? <div className='flex flex-col gap-1'>
+                <Label className='text-sm font-semibold' htmlFor="test_output">Test Output</Label>
+                <Textarea
+                    id="test_output"
+                    name="test_output"
+                    type='json'
+                    value={node.data.test_output}
+                    className='h-20'
+                    schema={node.data.response_format == 'json_schema' ? node.data.response_schema.schema : undefined}
+                    placeholder='Enter your output here...'
+                    onChange={(e) => setValue('test_output', e.target.value)}
+                    withoutHighlights
+                />
+            </div> : null}
             <ConfirmAlert
                 open={deletePrompt != undefined}
                 title="Delete prompt"

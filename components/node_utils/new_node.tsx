@@ -59,7 +59,7 @@ export default function NewNode() {
                     onChange={(e) => setSearch(e.target.value)}
                     className="h-8 text-sm px-2 w-full outline-none bg-transparent"
                 />
-                <div className="flex flex-col bg-white rounded-b-md border-t-2 border-accent h-44 overflow-y-auto select-none">
+                <div className="flex flex-col bg-white rounded-b-md border-t-2 border-accent h-[60vh] overflow-y-auto select-none">
                     {filteredNodes.length > 0 ? (
                         filteredNodes.map((node, index) => {
                             const Node = node.node;

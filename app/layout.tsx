@@ -6,6 +6,7 @@ import "./globals.css";
 import { ReactNode } from "react";
 import BaseLayout from "@/components/layout/base_layout";
 import { Toaster } from "@/components/ui/toaster";
+import IntroSlider from "@/components/layout/intro_slider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -44,6 +45,7 @@ export default function RootLayout({
           <BaseLayout>
             {children}
           </BaseLayout>
+          <IntroSlider/>
           <Toaster />
       </body>
     </html>

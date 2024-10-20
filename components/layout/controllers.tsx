@@ -120,7 +120,7 @@ export default function Controllers() {
           <Scan/>
         </Button>
       </Card>
-      <div className={cn("rounded-full p-2 absolute right-2 bottom-2 z-50 shadow-md h-16 w-16 flex items-center justify-center", isRunning ? "bg-red-500" : "bg-green-500")} >
+      <div className={cn("rounded-full p-2 absolute right-4 bottom-4 z-50 shadow-md h-16 w-16 flex items-center justify-center", isRunning ? "bg-red-500" : "bg-green-500")} >
         <Button className="rounded-full h-14 w-14 bg-transparent hover:bg-transparent p-2" variant="ghost" toolTip={isRunning ? "Stop" : "Play"} onClick={isRunning ? stop : startWrapper}>
           {isRunning ? <Square className="stroke-white" size={32} /> : <Play className="stroke-white" size={32} />}
         </Button>

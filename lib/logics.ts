@@ -1,5 +1,6 @@
 import { get } from "lodash";
 import { AppContext } from "./nodes";
+import safeEval from 'safe-eval'
 
 export const valueReg = new RegExp('\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}', 'gm')
 
@@ -15,12 +16,20 @@ const filterStatement = (statement: string) => {
     return statement.replaceAll(/(?<![<>!])=(?!=)/g, "==").replaceAll('===', '==');
 }
 
-export const replaceDynamicValueWithActual = (statement: string, context: AppContext, forFunction = false) => {
+export const replaceDynamicValueWithActual = (statement: string, context: AppContext) => {
     const filteredStatement = filterStatement(statement)
     const allTemplateWords = filteredStatement.match(valueReg) || []
-    const valueMap = Object.fromEntries(allTemplateWords.map(x => [x, get(context, x.substring(1,x.length -1))]))
+    const valueMap = Object.fromEntries(allTemplateWords.map(x => [x, get(context, x.substring(1, x.length - 1)) as unknown as string]))
     return Object.keys(valueMap).reduce((c, x) => {
-        return c.replaceAll(x, (forFunction ? JSON.stringify(valueMap[x]): valueMap[x]) as string)
+        return c.replaceAll(x, valueMap[x] as string)
+    }, filteredStatement) 
+}
+
+export const replaceDynamicValueWithValueRef = (statement: string) => {
+    const filteredStatement = filterStatement(statement)
+    const allTemplateWords = filteredStatement.match(valueReg) || []
+    return allTemplateWords.reduce((c, x) => {
+        return c.replaceAll(x, x.substring(1,x.length -1))
     }, filteredStatement) 
 }
 
@@ -34,9 +43,9 @@ export const replaceDynamicValueWithDummyValues = (statement: string) => {
 }
 
 export const runStatement = (statement: string, context: AppContext) => {
-    const logic = `return ${replaceDynamicValueWithActual(statement, context, true)}`
+    const logic = `(function () { return ${replaceDynamicValueWithValueRef(statement)} })()`
     try {
-        return new Function(logic)()
+        return safeEval(logic, context)
     } catch (error) {
         console.log(logic, error);
         return false
@@ -44,9 +53,9 @@ export const runStatement = (statement: string, context: AppContext) => {
 }
 
 export const validateStatement = (statement: string = '') => {
-    const logic = `return ${replaceDynamicValueWithDummyValues(statement)}`
+    const logic = `(function () { return ${replaceDynamicValueWithDummyValues(statement)} })()`
     try {
-        new Function(logic)()
+        safeEval(logic)
         return true
     } catch {
         return false

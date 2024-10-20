@@ -132,6 +132,10 @@ export type ChatPayload = {
     top_p?: number;
     frequency_penalty?: number;
     presence_penalty?: number;
+    response_format?: {
+      type: 'text' | 'json_object' | 'json_schema',
+      json_schema?: unknown
+    }
 }
 
 export type ChatCompletion = {
@@ -160,7 +164,7 @@ export function openAiTokenToCost(tokenCount: number, model: string): Decimal {
     return (new Decimal(modelDetails.find(x => x.title == model)?.tokenPrice || 0)).mul(tokenCount).div(1000) ;
 }
 
-export function OpenAiFaker() {
+export function OpenAiFaker(output?: string) {
     return {
         chat: (payload: ChatPayload) => new Promise<AxiosResponse<ChatCompletion>>((resolve) => {
             setTimeout(() => {
@@ -175,7 +179,7 @@ export function OpenAiFaker() {
                             index: 0,
                             message: {
                                 role: 'assistant',
-                                content: '## This is a fake response. \nLorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+                                content: output || ''
                             },
                             logprobs: null,
                             finish_reason: 'stop'

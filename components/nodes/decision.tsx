@@ -15,7 +15,7 @@ import { useShallow } from 'zustand/shallow';
 import { getOutgoers } from '@xyflow/react';
 import { runStatement } from '@/lib/logics';
 import { Button } from '../ui/button';
-import ConditionEditorPopup from '../node_utils/condition_editor_popup';
+import DynamicEditorPopup from '../node_utils/dynamic_editor_popup';
 
 export const OnConnect = async (payload: NodeConnectDisconnectPayload, updates: UpdatePayload) => {
     const edge = payload.connectedEdge
@@ -190,7 +190,7 @@ export const Properties = ({ node }: { node: AppNode }) => {
                     ))
                 )}
             </div>
-            <ConditionEditorPopup open={!!conditionEditorNode} value={conditionEditorNode?.condition} baseNode={node} onChange={(condition) => onChangeConditionEditorPopup(condition)} onClose={() => setConditionEditorNode(undefined)} />
+            <DynamicEditorPopup type='condition' open={!!conditionEditorNode} value={conditionEditorNode?.condition} baseNode={node} onChange={(condition) => onChangeConditionEditorPopup(condition)} onClose={() => setConditionEditorNode(undefined)} />
         </div>
     )
 }

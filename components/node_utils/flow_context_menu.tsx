@@ -118,7 +118,7 @@ export default function FlowContextMenu({ children }: PropsWithChildren) {
         const reactFlowDiv = document.querySelector('.react-flow') as HTMLInputElement
         if (!reactFlowDiv) return
 
-        function keyPressHandler(e: KeyboardEvent) {
+        const keyPressHandler = (e: KeyboardEvent) => {
             if ((e.ctrlKey || e.metaKey) && e.key == 'x') {
                 cut()
             }

@@ -12,11 +12,12 @@ import {
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { Bolt} from "lucide-react";
-import { DevMode, useSettingStore } from "@/lib/store";
+import { Bolt, SquareArrowDownIcon, SquareArrowOutUpRight} from "lucide-react";
+import { DevMode, useFlowStore, useSettingStore } from "@/lib/store";
 import { useShallow } from "zustand/shallow";
 import { Switch } from "../ui/switch";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const devModeInputs = {
     testOpenAPI: "Use Test OpenAI API",
@@ -25,6 +26,7 @@ const devModeInputs = {
 }
 
 export default function Settings() {
+    const { toast } = useToast()
     const { openAIKey, setOpenAIKey, devMode, setDevMode } = useSettingStore(useShallow(state => ({
         openAIKey: state.openAIKey,
         setOpenAIKey: state.setOpenAIKey,
@@ -46,8 +48,52 @@ export default function Settings() {
         toggleDevMode(anyTrue)
     }
 
+    const onImport = () => {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.json';
+        fileInput.onchange = async (event) => {
+            const file = (event.target as HTMLInputElement).files?.[0];
+            if (file) {
+                const text = await file.text();
+                try {
+                    const payload = JSON.parse(text);
+                    const { setNodes, setEdges } = useFlowStore.getState();
+                    setNodes(payload.nodes)
+                    setEdges(payload.edges)
+                } catch (error) {
+                    toast({
+                        title: `Something went wrong`,
+                        description: (error as Error).message,
+                        duration: 3000
+                    })
+                }
+                fileInput.remove();
+            }
+        };
+        fileInput.click();
+    }
+
+    const onExport = () => {
+        const { nodes, edges } = useFlowStore.getState();
+        const data = JSON.stringify({ nodes, edges }, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'flow_data.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
     return (
         <Card className="absolute top-2 right-2 p-1 flex gap-2 z-50">
+            <Button toolTip="Import" size="icon" variant="ghost" onClick={onImport}>
+                <SquareArrowDownIcon size={20} />
+            </Button>
+            <Button toolTip="Export" size="icon" variant="ghost" onClick={onExport}>
+                <SquareArrowOutUpRight size={20} />
+            </Button>
             <Dialog>
                 <DialogTrigger>
                     <Button toolTip="Settings" size="icon" variant="ghost">

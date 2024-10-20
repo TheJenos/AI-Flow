@@ -1,6 +1,7 @@
 import { useSettingStore } from "@/lib/store";
 import { ArrowUpDown, DollarSign, MoveUp, MoveDown, Timer } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 export type StatsProps = {
     startTime?: number
@@ -13,7 +14,7 @@ export type StatsProps = {
 export function Stats({ startTime, endTime, inToken, outToken, amount }: StatsProps) {
     const [duration, setDuration] = useState<string>("00:00.000")
     const isTestAPI = useSettingStore((state) => state.devMode?.testOpenAPI || false)
-    const covetedAmount =  String(amount.toFixed(6)).padStart(7, '0')
+    const covetedAmount = String(amount.toFixed(6)).padStart(7, '0')
 
     const coveterDuration = (start?: number, end?: number) => {
         if (!start) return `00:00.000`
@@ -38,11 +39,11 @@ export function Stats({ startTime, endTime, inToken, outToken, amount }: StatsPr
         <div className="mt-3">
             {isTestAPI ? <span className="font-bold text-red-600 text-xs">Currently you are using Test API</span> : null}
             <div className="grid sm:grid-cols-3 xl:grid-cols-5 gap-2 text-xs bg-accent p-2 rounded-md flex-wrap border border-gray-300">
-                <div className="flex items-center gap-1"><MoveUp size={16} /> {inToken}</div>
-                <div className="flex items-center gap-1"><MoveDown size={16} /> {outToken}</ div>
-                <div className="flex items-center gap-1"><ArrowUpDown size={16} /> {inToken + outToken}</ div>
-                <div className="flex items-center gap-1"><DollarSign size={16} /> {covetedAmount}</div>
-                <div className="flex items-center gap-1"><Timer size={16} /> {duration}</div>
+                <Tooltip><TooltipTrigger><div className="flex items-center gap-1"><MoveUp size={16} /> {inToken}</div></TooltipTrigger><TooltipContent>Prompt Token Count</TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger><div className="flex items-center gap-1"><MoveDown size={16} /> {outToken}</ div></TooltipTrigger><TooltipContent>Completion Token Count</TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger><div className="flex items-center gap-1"><ArrowUpDown size={16} /> {inToken + outToken}</ div></TooltipTrigger><TooltipContent>Total Token Count</TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger><div className="flex items-center gap-1"><DollarSign size={16} /> {covetedAmount}</div></TooltipTrigger><TooltipContent>Cost in USD</TooltipContent></Tooltip>
+                <Tooltip><TooltipTrigger><div className="flex items-center gap-1"><Timer size={16} /> {duration}</div></TooltipTrigger><TooltipContent>Duration</TooltipContent></Tooltip>
             </div>
         </div>
     )

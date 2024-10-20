@@ -25,7 +25,7 @@ const nodes = [
 export type NodeState = 'idle' | 'faded' | 'waiting' | 'running' | 'completed' | 'failed';
 
 export type OutputExtra =  {
-    [key: string] : string | number | object | undefined
+    [key: string] : string | number | object | unknown | undefined
 }
 
 export type AppContext = {

@@ -7,25 +7,23 @@ export default function UndoRedo() {
     const { undo, redo, futureStates, pastStates } = useTemporalFlowStore((state) => state);
 
     useEffect(() => {
-      function keyPressHandler(e: KeyboardEvent) {
-        const element = e.target as HTMLElement
-        if (element.tagName == "INPUT" || element.tagName == "TEXTAREA") return
-        if (element.classList.contains('public-DraftEditor-content')) return
-        e.preventDefault()
-        
-        if ((e.ctrlKey || e.metaKey) && e.key == 'z') {
+      const reactFlowDiv = document.querySelector('.react-flow') as HTMLInputElement
+      if (!reactFlowDiv) return
+
+      const keyPressHandler = (e: KeyboardEvent) => {
+          if ((e.ctrlKey || e.metaKey) && e.key == 'z') {
             undo()
-        }
+          }
 
-        if ((e.ctrlKey || e.metaKey) && e.key == 'y') {
+          if ((e.ctrlKey || e.metaKey) && e.key == 'y') {
             redo()
-        }
+          }
       }
-      
-      window.addEventListener('keydown', keyPressHandler);
 
-      return () => window.removeEventListener('keydown', keyPressHandler)
-    }, [redo, undo])
+      reactFlowDiv.addEventListener('keydown', keyPressHandler);
+
+      return () => reactFlowDiv.removeEventListener('keydown', keyPressHandler)
+  }, [redo, undo])
 
     return <>
      <Toggle toolTip="Undo" onClick={() => undo()} disabled={pastStates.length == 0} >
