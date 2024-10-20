@@ -16,6 +16,7 @@ import { getOutgoers } from '@xyflow/react';
 import { runStatement } from '@/lib/logics';
 import { Button } from '../ui/button';
 import DynamicEditorPopup from '../node_utils/dynamic_editor_popup';
+import { Textarea } from '../ui/textarea';
 
 export const OnConnect = async (payload: NodeConnectDisconnectPayload, updates: UpdatePayload) => {
     const edge = payload.connectedEdge
@@ -169,12 +170,12 @@ export const Properties = ({ node }: { node: AppNode }) => {
                                     <div className="flex flex-col mb-1 gap-2">
                                         <Label className='text-sm'>Condition</Label>
                                         <div className='flex gap-2'>
-                                            <Input
+                                            <Textarea
                                                 name="condition"
                                                 readOnly
                                                 disabled={get(node, `data.decisions.${oNode.id}.type`) == 'else'}
                                                 value={get(node, `data.decisions.${oNode.id}.condition`, '')}
-                                                valueHighlights
+                                                withoutRichText
                                             />
                                             <Button toolTip="Condition Editor" size={'icon'} onClick={() => setConditionEditorNode({
                                                 nodeId: oNode.id,

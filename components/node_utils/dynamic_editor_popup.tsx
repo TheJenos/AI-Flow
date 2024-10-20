@@ -7,6 +7,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { validateStatement } from "@/lib/logics";
 import ValueSelector from "./value_selector";
+import { Textarea } from "../ui/textarea";
 
 type DynamicEditorPopupProps = {
     baseNode: AppNode,
@@ -40,7 +41,7 @@ export default function DynamicEditorPopup({ baseNode, open, type, value, onChan
                 {type == 'condition' ? <DialogFooter className="items-end">
                     <div className="w-full">
                         <Label>Condition <span className={isValidCondition ? 'text-green-600' : 'text-red-600'}>{isValidCondition ? '(Valid)' : '(Invalid)'}</span></Label>
-                        <Input className={cn('mt-2', isValidCondition ? 'outline !outline-green-600' : 'outline !outline-red-600')} valueHighlights value={condition} onChange={(e) => setCondition(e.target.value)} />
+                        <Textarea classNameFrame={cn('mt-2', isValidCondition ? 'outline !outline-green-600' : 'outline !outline-red-600')} value={condition} onChange={(e) => setCondition(e.target.value)} withoutRichText />
                     </div>
                     <DialogClose asChild>
                         <Button disabled={!isValidCondition} onClick={() => isValidCondition ? onChange(condition) : null}>Set Condition</Button>

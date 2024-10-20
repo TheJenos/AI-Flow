@@ -27,7 +27,7 @@ export function Input({ className, value, onChange, sizeHeight, placeholder, rea
 
   if (valueHighlights) 
   return (
-    <div className={cn(inputVariants({ sizeHeight }), className)} >
+    <div className={cn(inputVariants({ sizeHeight }), className, "[&_.DraftEditor-root]:overflow-auto")} >
         <HighlightWithinTextarea highlight={headlights} placeholder={placeholder} readOnly={readOnly} value={value?.toString() || ''} onChange={(value) => onChange && onChange({ target: { value } } as ChangeEvent<HTMLInputElement>)} />
     </div>
   )
