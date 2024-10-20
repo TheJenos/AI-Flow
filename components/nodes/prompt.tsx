@@ -182,7 +182,7 @@ export const Process = async (context: AppContext, node: AppNode<PromptData>, ne
     controller.increaseAmount(amount)
 
     context[node.id] = Object.fromEntries(Object.entries(Outputs(node, {
-        assistant_output: output,
+        assistant_raw_output: output,
         assistant_json_output: (response_format || 'text') != 'text' ? JSON.parse(output || '{}') : undefined
     })).map(([key, value]) => [key, value.value]))
 
