@@ -61,6 +61,7 @@ export default function Settings() {
                     const { setNodes, setEdges } = useFlowStore.getState();
                     setNodes(payload.nodes)
                     setEdges(payload.edges)
+                    window.location.reload();
                 } catch (error) {
                     toast({
                         title: `Something went wrong`,

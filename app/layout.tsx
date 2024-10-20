@@ -28,11 +28,11 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <title>LLM Flow</title>
-        <meta name="description" content="A simple LLM flow tester" />
+        <meta name="description" content="LLM Flow is a web application that enables you to test and refine your AI workflows without any coding. It also helps to create proof of concept from flow charts, making it easier to visualize and iterate on your ideas." />
         <meta name="keywords" content="AI, LLM, flow, tester, machine learning, artificial intelligence, OPENAI, CHATGPT" />
         <meta name="author" content="Thanura Nadun Ranasinghe" />
         <meta property="og:title" content="LLM Flow" />
-        <meta property="og:description" content="A simple LLM flow tester" />
+        <meta property="og:description" content="LLM Flow is a web application that enables you to test and refine your AI workflows without any coding. It also helps to create proof of concept from flow charts, making it easier to visualize and iterate on your ideas." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://llmflow.netlify.com" />
         <meta property="og:image" content="/logo.svg" />
