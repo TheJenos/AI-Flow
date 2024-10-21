@@ -3,11 +3,11 @@ import { useEffect, useMemo, useState } from "react";
 import { AppNode } from "@/lib/store";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
-import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { validateStatement } from "@/lib/logics";
 import ValueSelector from "./value_selector";
 import { Textarea } from "../ui/textarea";
+import mixpanel from "mixpanel-browser";
 
 type DynamicEditorPopupProps = {
     baseNode: AppNode,
@@ -26,6 +26,10 @@ export default function DynamicEditorPopup({ baseNode, open, type, value, onChan
     }, [value])
 
     const isValidCondition = useMemo(() => validateStatement(condition), [condition])
+
+    useEffect(() => {
+        mixpanel.track('dynamic_editor_opened', {type})
+    }, [type])  
 
     return (
         <Dialog open={open} onOpenChange={(state) => !state && onClose && onClose()}>

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Editor, EditorState, RichUtils, getDefaultKeyBinding, DraftHandleValue, DraftStyleMap, ContentBlock, convertFromRaw, convertToRaw } from 'draft-js';
 import { draftToMarkdown, markdownToDraft } from 'markdown-draft-js';
 import 'draft-js/dist/Draft.css';
@@ -6,6 +6,7 @@ import { Heading1, Heading2, Heading3, Heading4, Heading5, Heading6, TextQuote, 
 import { Toggle } from './toggle';
 import { DecoratorFactory } from 'react-highlight-within-textarea'
 import { headlights } from '@/lib/logics';
+import mixpanel from 'mixpanel-browser';
 
 const styleMap: DraftStyleMap = {
   CODE: {
@@ -175,6 +176,10 @@ function RichTextEditor({ initialContent, onChange, extraToolButtons, withoutHig
       decorator: decorator,
     });
   }
+
+  useEffect(() => {
+    mixpanel.track('rich_text_editor_opened')
+  }, [])
     
   return (
     <div className="RichEditor-root">

@@ -3,12 +3,13 @@
 import { PenBox } from "lucide-react";
 import { Button } from "./button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./dialog";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "./input";
 import { Label } from "./label";
 import { cloneDeep, set } from "lodash";
 import { editor } from 'monaco-editor';
 import JsonEditor from "./json_editor";
+import mixpanel from "mixpanel-browser";
 
 type SchemaEditorProps = {
   defaultValue?: SchemaType,
@@ -165,6 +166,10 @@ export default function SchemaEditor({ defaultValue, onSave }: SchemaEditorProps
     set(clonedSchema, key, value)
     setSchema(clonedSchema)
   }
+
+  useEffect(() => {
+    mixpanel.track('schema_editor_opened')
+  }, [])
 
   return (
     <div className='rounded-md relative'>

@@ -2,8 +2,15 @@ import { Maximize2 } from "lucide-react";
 import { Button } from "./button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./dialog";
 import Markdown from "react-markdown";
+import { useEffect } from "react";
+import mixpanel from "mixpanel-browser";
 
 export default function MarkdownViewer({text}: {text: string}) {
+
+    useEffect(() => {
+        mixpanel.track('markdown_viewer_opened')
+    }, [])    
+
     return (
         <div className='rounded-md relative'>
             <div className="bg-accent p-2 text-xs rounded-md whitespace-pre-wrap max-h-28 overflow-y-auto border border-gray-300">

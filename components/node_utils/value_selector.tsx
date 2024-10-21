@@ -8,6 +8,7 @@ import { Button } from "../ui/button";
 import { Plus } from "lucide-react";
 import { trimStrings } from "@/lib/utils";
 import CustomEdge from "./custom_edge";
+import mixpanel from "mixpanel-browser";
 
 export default function ValueSelector({ baseNode, onSelect }: { baseNode: AppNode, onSelect: (condition: string) => void }) {
     const [selectedNode, setSelectedNode] = useState<{
@@ -61,6 +62,7 @@ export default function ValueSelector({ baseNode, onSelect }: { baseNode: AppNod
     const addDynamicValue = (node: AppNode, details: NodeMetaData, key: string) => {
         const valueIdentifier = details.valueIdentifier && details.valueIdentifier(node) || node.id
         onSelect(`{${valueIdentifier}.${key}}`)
+        mixpanel.track('value_selected')
     }
 
     return (

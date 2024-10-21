@@ -3,10 +3,11 @@
 import localFont from "next/font/local";
 import '@xyflow/react/dist/base.css';
 import "./globals.css";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import BaseLayout from "@/components/layout/base_layout";
 import { Toaster } from "@/components/ui/toaster";
 import IntroSlider from "@/components/layout/intro_slider";
+import mixpanel from 'mixpanel-browser'
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -24,6 +25,11 @@ export default function RootLayout({
 }: Readonly<{
   children: ReactNode;
 }>) {
+
+  useEffect(() => {
+    mixpanel.init("862df36b564f6a34e7f5829c4ad99fef", { debug: true, track_pageview: true, persistence: 'localStorage' });
+  },[])
+
   return (
     <html lang="en">
       <head>
@@ -42,11 +48,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-          <BaseLayout>
-            {children}
-          </BaseLayout>
-          <IntroSlider/>
-          <Toaster />
+        <IntroSlider />
+        <BaseLayout>
+          {children}
+        </BaseLayout>
+        <Toaster />
       </body>
     </html>
   );

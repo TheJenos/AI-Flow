@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog"
 import { useCallback, useEffect, useState } from "react"
 import { versionData } from "./logo"
+import mixpanel from "mixpanel-browser"
 
 export default function IntroSlider() {
   const [api, setApi] = useState<CarouselApi>()
@@ -49,12 +50,14 @@ export default function IntroSlider() {
     if (isFinished) {
       setOpen(false)
       localStorage.setItem('introVersion', versionData.introVersion)
+      mixpanel.track('intro_finished', { skipped: false })
     }
   }, [isFinished])
 
   const handleSkip = useCallback(() => {
     setOpen(false)
     localStorage.setItem('introVersion', versionData.introVersion)
+    mixpanel.track('intro_finished', { skipped: true })
   }, [])
 
   const slides = [

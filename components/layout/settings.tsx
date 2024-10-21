@@ -18,6 +18,7 @@ import { useShallow } from "zustand/shallow";
 import { Switch } from "../ui/switch";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import mixpanel from "mixpanel-browser";
 
 const devModeInputs = {
     testOpenAPI: "Use Test OpenAI API",
@@ -51,7 +52,7 @@ export default function Settings() {
     const onImport = () => {
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
-        fileInput.accept = '.json';
+        fileInput.accept = '.flow';
         fileInput.onchange = async (event) => {
             const file = (event.target as HTMLInputElement).files?.[0];
             if (file) {
@@ -61,6 +62,7 @@ export default function Settings() {
                     const { setNodes, setEdges } = useFlowStore.getState();
                     setNodes(payload.nodes)
                     setEdges(payload.edges)
+                    mixpanel.track('import_a_file')
                     window.location.reload();
                 } catch (error) {
                     toast({
@@ -82,9 +84,10 @@ export default function Settings() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'flow_data.json';
+        a.download = `LLM_Flow_${new Date().toISOString().slice(0, 10)}.flow`;
         a.click();
         URL.revokeObjectURL(url);
+        mixpanel.track('export_a_file')
     }
 
     return (
@@ -128,6 +131,7 @@ export default function Settings() {
                                 className="col-span-5"
                                 defaultChecked={isDevMode}
                                 onClick={() => toggleDevMode(s => !s)}
+                                onMouseDown={() => mixpanel.track('toggle_dev_mode')}
                             />
                             {isDevMode ? <div className="col-start-3 col-span-6 flex flex-col gap-2">
                                 {Object.entries(devModeInputs).map(([key,value])=> (

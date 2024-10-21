@@ -149,7 +149,7 @@ export const Properties = ({ node }: { node: AppNode }) => {
                     <div className="text-sm text-gray-500">No connections to Decisions block.</div>
                 ) : (
                     outgoers.map(({ oNode, oNodeDetails }, index) => (
-                        <Card key={index} className="flex flex-col pb-2 p-3 border-b border-gray-200">
+                        <Card key={index} className="flex flex-col mb-2 p-3 border-b border-gray-200">
                             <span className='text-sm font-semibold'>{oNode.data.name ? `${oNode.data.name} (${oNodeDetails.name})` : `${oNodeDetails.name} (${oNode.id})`}</span>
 
                             {get(node, `data.decisions.${oNode.id}.type`) == 'else' ?
@@ -169,13 +169,14 @@ export const Properties = ({ node }: { node: AppNode }) => {
                                     </div>
                                     <div className="flex flex-col mb-1 gap-2">
                                         <Label className='text-sm'>Condition</Label>
-                                        <div className='flex gap-2'>
+                                        <div className='flex gap-2 items-start'>
                                             <Textarea
                                                 name="condition"
                                                 readOnly
                                                 disabled={get(node, `data.decisions.${oNode.id}.type`) == 'else'}
                                                 value={get(node, `data.decisions.${oNode.id}.condition`, '')}
                                                 withoutRichText
+                                                classNameFrame='flex-1'
                                             />
                                             <Button toolTip="Condition Editor" size={'icon'} onClick={() => setConditionEditorNode({
                                                 nodeId: oNode.id,
@@ -186,7 +187,7 @@ export const Properties = ({ node }: { node: AppNode }) => {
                                         </div>
                                     </div>
                                 </>)}
-                            {!alreadyHaveElse && (!get(node, `data.decisions.${oNode.id}.name`) && !get(node, `data.decisions.${oNode.id}.condition`)) ? <Button className='mt-2' variant={'ghost'} onClick={() => markAsElse(oNode.id)}>Set else condition</Button> : null}
+                            {!alreadyHaveElse && outgoers.length > 1 && (!get(node, `data.decisions.${oNode.id}.name`) && !get(node, `data.decisions.${oNode.id}.condition`)) ? <Button className='mt-2' variant={'ghost'} onClick={() => markAsElse(oNode.id)}>Set else condition</Button> : null}
                         </Card>
                     ))
                 )}
