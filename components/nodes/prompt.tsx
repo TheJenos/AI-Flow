@@ -356,7 +356,7 @@ export const Properties = ({ node }: { node: AppNode<PromptData> }) => {
                 <Textarea
                     id="test_output"
                     name="test_output"
-                    type='json'
+                    type={ ['json_schema','json_object'].includes(node.data.response_format) ? 'json' : 'text'}
                     value={node.data.test_output}
                     className='h-20'
                     schema={node.data.response_format == 'json_schema' ? node.data.response_schema.schema : undefined}
