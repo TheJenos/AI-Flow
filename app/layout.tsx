@@ -27,7 +27,7 @@ export default function RootLayout({
 }>) {
 
   useEffect(() => {
-    mixpanel.init("862df36b564f6a34e7f5829c4ad99fef", { debug: true, track_pageview: true, persistence: 'localStorage' });
+    mixpanel.init("862df36b564f6a34e7f5829c4ad99fef", { debug: false, track_pageview: true, persistence: 'localStorage' });
   },[])
 
   return (
