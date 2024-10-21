@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 import NoteIcon from '../node_utils/node_icon';
 import { ThreadSourceHandle, ThreadTargetHandle } from '../node_utils/thread_handle';
 import DevMode from '../node_utils/dev_mode';
-import { runStatement, validateStatement } from '@/lib/logics';
+import { replaceDynamicValueWithActual } from '@/lib/logics';
 import MarkdownViewer from '../ui/markdown_viewer';
 
 type ConsoleLogData = NodeData & {
@@ -47,7 +47,7 @@ export function LogView({ payload }: NodeLogViewProps<string>) {
 }
 
 export const Process = async (context: AppContext, node: AppNode<ConsoleLogData>, nextNodes: AppNode[], controller: Controller) => {
-    const output = runStatement(node.data.log, context)
+    const output = replaceDynamicValueWithActual(node.data.log, context)
     if (output) {
         console.log(`Log:${node.id} `, output);
         controller.log({
@@ -70,8 +70,6 @@ export const Properties = ({ node }: { node: AppNode<ConsoleLogData> }) => {
         updateNode(clonedNode);
     }
 
-    const isValidCondition = useMemo(() => validateStatement(node.data.log),[node.data.log])
-
     return (
         <div className='flex flex-col gap-3 px-3'>
             <div className='flex flex-col gap-1'>
@@ -84,13 +82,12 @@ export const Properties = ({ node }: { node: AppNode<ConsoleLogData> }) => {
                 />
             </div>
             <div className='flex flex-col gap-1'>
-                <Label className='text-sm font-semibold' htmlFor="log">Log <span className={isValidCondition ? 'text-green-600': 'text-red-600'}>{isValidCondition ? '(Valid)' : '(Invalid)'}</span></Label>
+                <Label className='text-sm font-semibold' htmlFor="log">Log</Label>
                 <Textarea
                     id="log"
                     name="log"
                     value={node.data.log}
                     className='h-20'
-                    classNameFrame={isValidCondition ? 'outline !outline-green-600' : 'outline !outline-red-600'}
                     placeholder='Enter your statement here...'
                     onChange={(e) => setValue('log', e.target.value)}
                     node={node}

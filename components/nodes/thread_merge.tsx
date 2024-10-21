@@ -23,8 +23,9 @@ export const Process = async (context: AppContext, node: AppNode, nextNodes: App
     await new Promise((resolve) => {
         const WaitTillAllEnd = () => {
             const { nodes, edges } = useFlowStore.getState()
+            const { nodeStates } = useRuntimeStore.getState()
             const incomers = getIncomers(node, nodes, edges)
-            const havePending = incomers.some(x => ['idle', 'waiting', 'running'].includes(x.data.state as string))
+            const havePending = incomers.map(x => nodeStates[x.id]).some(x => ['idle', 'waiting', 'running'].includes(x))
             if (havePending) {
                 setTimeout(WaitTillAllEnd, 200)
             } else {

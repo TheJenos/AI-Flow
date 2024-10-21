@@ -74,6 +74,8 @@ export default function Controllers() {
       let next = []
 
       try {
+        const nodeStates = useRuntimeStore.getState().nodeStates;
+        if (nodeStates[node.id] == 'running') return;
         updateNodeState(node, 'running', context);
         next = await details.process(context, node, outgoers, controller);
         updateNodeState(node, 'completed', context);
