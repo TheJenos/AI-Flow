@@ -1,4 +1,4 @@
-import { useFlowStore,  AppNode } from "@/lib/store";
+import { useFlowStore,  AppNode, findParentMultiThreadNodeThread } from "@/lib/store";
 import { Handle, Position, Edge, Connection, getIncomers, getOutgoers, useHandleConnections } from "@xyflow/react";
 
 type ThreadHandleProp = {
@@ -25,7 +25,10 @@ export function ThreadTargetHandle({ active = true, type = 'normal' }: ThreadHan
 
         const selfNode = nodes.find(x => x.id == connection.target) as AppNode
 
-        if (selfNode.type == "thread_merge") return true
+        if (selfNode.type == "thread_merge")  {
+            const otherThread = findParentMultiThreadNodeThread([otherNode], nodes, edges)
+            if (selfNode.data.thread == otherThread) return true
+        }
 
         return selfNode?.data.thread == otherNode?.data.thread;
     }
@@ -50,13 +53,16 @@ export function ThreadSourceHandle({ active = true, type = 'normal' }: ThreadHan
         if (connection.source == connection.target) return false
 
         const otherNode = nodes.find(x => x.id == connection.target) as AppNode
-
-        if (otherNode.type == "thread_merge") return true
-
+        
         const incomers = getIncomers(otherNode, nodes, edges)
         if (connections.length == 0 && incomers.length == 0) return true
-        
+
         const selfNode = nodes.find(x => x.id == connection.source) as AppNode
+        
+        if (otherNode.type == "thread_merge" && incomers.length > 0)  {
+            const selfThread = findParentMultiThreadNodeThread([selfNode], nodes, edges)
+            if (otherNode.data.thread == selfThread) return true
+        }
 
         if (selfNode.type == "multi_thread" || selfNode.type == "decision") return true
 

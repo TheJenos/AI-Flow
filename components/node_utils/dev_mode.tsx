@@ -8,6 +8,8 @@ export default function DevMode({data }:{data:NodeData}) {
     return (
         <div className='text-xs font-semibold whitespace-pre'>
             {data.thread}
+            <br/>
+            {data.parentId}
         </div>
     )
 }

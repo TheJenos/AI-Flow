@@ -1,5 +1,5 @@
 import { create, useStore } from 'zustand';
-import { addEdge, applyNodeChanges, applyEdgeChanges, getOutgoers, NodeProps } from '@xyflow/react';
+import { addEdge, applyNodeChanges, applyEdgeChanges, getOutgoers, NodeProps, getIncomers } from '@xyflow/react';
 import { createComputed } from "zustand-computed";
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Edge, Node, OnNodesChange, OnEdgesChange, OnConnect } from '@xyflow/react';
@@ -161,31 +161,67 @@ const processOnDisconnect = (
 }
 
 const processNodeThread = (
-    nodesToProcess: { node: AppNode, parentNode?: AppNode }[],
+    node: { node: AppNode, parentNode?: AppNode, thread: string },
     nodes: AppNode[],
     edges: Edge[],
-    updates: UpdatePayload,
-    thread: string,
-    edgeRemover?: boolean
+    updates: UpdatePayload
 ) => {
+    const nodesToProcess = [node]
     while (nodesToProcess.length > 0) {
-        const { node: currentNode, parentNode } = nodesToProcess.pop()!;
-        if (edgeRemover && !!currentNode.data.parentId && !!parentNode?.id && currentNode.data.parentId != parentNode?.id) {
-            const needToRemoveEdge = edges.find(x => x.source == parentNode.id && x.target == currentNode.id)
-            if (needToRemoveEdge) {
-                updates.edges[needToRemoveEdge.id] = null
+        const { node: currentNode, parentNode, thread } = nodesToProcess.pop()!;
+        if (updates.nodes[currentNode.id] || (currentNode.data.thread == thread && currentNode.data.parentId == parentNode?.id)) continue;
+        
+        let newThread = parentNode && parentNode.type === 'multi_thread' ? Math.random().toString(16).slice(2) : thread
+        if (currentNode.type === 'thread_merge') {
+            const otherParents = getIncomers(currentNode, nodes, edges);
+            if (parentNode || otherParents.length > 0) {
+                const nodesWithUpdates = nodes.filter(node => updates.nodes[node.id] !== null).map(node => node.id in updates.nodes ? { ...merge(node, updates.nodes[node.id]) } : node)
+                if (parentNode) {
+                    otherParents.push(parentNode)
+                }
+                newThread = findParentMultiThreadNodeThread(otherParents, nodesWithUpdates, edges);
             }
-            continue
         }
-        if (currentNode.type === 'thread_merge') continue;
-        if (!(currentNode.id in updates)) {
-            updates['nodes'][currentNode.id] = merge(updates['nodes'][currentNode.id], { data:{ thread, parentId: parentNode?.id } });
-            if (currentNode.type === 'multi_thread') continue;
-            const children = getOutgoers(currentNode, nodes, edges);
-            nodesToProcess.push(...children.map(child => ({ node: child, parentNode: currentNode })));
-        }
+
+        updates['nodes'][currentNode.id] = merge(updates['nodes'][currentNode.id], { data:{ thread: newThread, parentId: parentNode?.id } });
+        const children = getOutgoers(currentNode, nodes, edges);
+        nodesToProcess.push(...children.map(child => ({ node: child, parentNode: currentNode, thread: newThread })));
+    }
+
+    const nodesWithUpdates = nodes.filter(node => updates.nodes[node.id] !== null).map(node => node.id in updates.nodes ? { ...merge(node, updates.nodes[node.id]) } : node)
+    const edgeProcess = [nodesWithUpdates.find(x => x.id == node.node.id)!]
+    const checked: {[key: string]: boolean} = {}
+    while (edgeProcess.length > 0) {
+        const currentNode = edgeProcess.pop()!;
+        if (checked[currentNode.id]) continue;
+
+        const parents = getIncomers(currentNode, nodesWithUpdates, edges);
+        const notMatchingThreads = currentNode.type == 'thread_merge' ? [] : parents.filter(x => x.data.thread != currentNode.data.thread && x.type != 'multi_thread')
+        const needToRemoveEdges = notMatchingThreads.map(x => edges.find(y => y.source == x.id && y.target == currentNode.id)!)
+
+        needToRemoveEdges.forEach(x => {
+            updates.edges[x.id] = null
+        })
+
+        checked[currentNode.id] = true
+        const children = getOutgoers(currentNode, nodesWithUpdates, edges);
+        edgeProcess.push(...children);
     }
 };
+
+export const findParentMultiThreadNodeThread = (
+    nodesToProcess: AppNode[],
+    nodes: AppNode[],
+    edges: Edge[],
+) => {
+    while (nodesToProcess.length > 0) {
+        const currentNode = nodesToProcess.pop()!;
+        if (currentNode.type == 'multi_thread') return currentNode.data.thread
+        const children = getIncomers(currentNode, nodes, edges);
+        nodesToProcess.push(...children);
+    }
+    return Math.random().toString(16).slice(2)
+}
 
 const initialNodes: AppNode[] = [{
     id: 'start',
@@ -224,18 +260,15 @@ export const useFlowStore = create<AppState>()(temporal(persist(computed((set, g
         };
 
         for (const edge of removedEdges) {
-            const newThread = Math.random().toString(16).slice(2);
-            const targetNode = nodes.find(node => node.id === edge.target);
-            const sourceNode = nodes.find(node => node.id === edge.source);
+            const targetNode = nodes.find(node => node.id === edge.target)!;
+            const sourceNode = nodes.find(node => node.id === edge.source)!;
 
-            if (!targetNode || !sourceNode || targetNode.type === 'thread_merge' ||
-                (targetNode.data.parentId !== sourceNode.id && targetNode.data.thread === sourceNode.data.thread)) continue;
+            if (targetNode.data.parentId !== sourceNode.id && targetNode.data.thread === sourceNode.data.thread) continue;
 
             processOnDisconnect(nodes, edges, targetNode, sourceNode, updates)
-
-            const nodesToProcess = [{ node: targetNode }];
-
-            processNodeThread(nodesToProcess, nodes, edges, updates, newThread, true);
+            const otherParents = getIncomers(targetNode, nodes, newEdges);
+            const sourceThread = otherParents.length == 0 ? Math.random().toString(16).slice(2) : otherParents[0].data.thread;
+            processNodeThread({ node: targetNode, thread:sourceThread }, nodes, newEdges, updates);
         }
 
         set({
@@ -246,28 +279,25 @@ export const useFlowStore = create<AppState>()(temporal(persist(computed((set, g
     onConnect: connection => {
         const { edges, nodes } = get();
         const newEdges = addEdge(connection, edges).map(x => (Object.fromEntries(Object.entries(x).filter(([key]) => !['markerEnd', 'style'].includes(key))) as Edge))
-        const sourceNode = nodes.find(node => node.id === connection.source);
+        const sourceNode = nodes.find(node => node.id === connection.source)!;
         const sourceThread = ((!sourceNode || sourceNode.type === 'multi_thread') ? Math.random().toString(16).slice(2) : sourceNode.data.thread) as string;
-        const targetNode = nodes.find(node => node.id === connection.target);
+        const targetNode = nodes.find(node => node.id === connection.target)!;
 
         const updates: UpdatePayload = {
             edges: {},
             nodes: {}
         };
 
-        if (!sourceNode || !targetNode) return;
-        const newEdge = newEdges.find(x => x.source == sourceNode.id && x.target == targetNode.id)!
-        processOnConnect(nodes, newEdges, targetNode, sourceNode, newEdge, updates)
-
-        if (targetNode.type === 'thread_merge' || (targetNode.data.parentId !== sourceNode.id && sourceNode.data.thread === targetNode.data.thread)) {
+        if (targetNode.data.parentId !== sourceNode.id && targetNode.data.thread === sourceNode.data.thread) {
             set({ 
-                edges: newEdges.filter(edge => updates.edges[edge.id] !== null).map(edge => edge.id in updates.edges ? { ...merge(edge, updates.edges[edge.id]) } : edge)
+                edges: newEdges
             });
             return;
-        }
+        };
 
-        const nodesToProcess = [{ node: targetNode, parentNode: sourceNode }];
-        processNodeThread(nodesToProcess, nodes, edges, updates, sourceThread);
+        const newEdge = newEdges.find(x => x.source == sourceNode.id && x.target == targetNode.id)!
+        processOnConnect(nodes, newEdges, targetNode, sourceNode, newEdge, updates)
+        processNodeThread({ node: targetNode, parentNode: sourceNode, thread:sourceThread }, nodes, edges, updates);
 
         set({
             edges: newEdges.filter(edge => updates.edges[edge.id] !== null).map(edge => edge.id in updates.edges ? { ...merge(edge, updates.edges[edge.id]) } : edge),
