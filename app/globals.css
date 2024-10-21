@@ -115,7 +115,15 @@
 }
 
 .RichEditor-root p {
-  @apply text-base mb-4;
+  @apply text-base mb-4 whitespace-pre-line;
+}
+
+.RichEditor-root ol {
+  @apply px-5 list-decimal;
+}
+
+.RichEditor-root ul {
+  @apply px-5 list-disc;
 }
 
 .RichEditor-editor {
