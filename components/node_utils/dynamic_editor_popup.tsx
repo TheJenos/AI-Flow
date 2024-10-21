@@ -28,8 +28,8 @@ export default function DynamicEditorPopup({ baseNode, open, type, value, onChan
     const isValidCondition = useMemo(() => validateStatement(condition), [condition])
 
     useEffect(() => {
-        mixpanel.track('dynamic_editor_opened', {type})
-    }, [type])  
+        if (open) mixpanel.track('dynamic_editor_opened', {type})
+    }, [open,type])  
 
     return (
         <Dialog open={open} onOpenChange={(state) => !state && onClose && onClose()}>
