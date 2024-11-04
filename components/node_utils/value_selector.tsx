@@ -121,7 +121,7 @@ export default function ValueSelector({ baseNode, onSelect }: { baseNode: AppNod
                                     </div>
                                 </div>
                             </div>
-                            <div className="h-full overflow-y-auto">
+                            <div className="flex flex-col pb-2.5 h-full overflow-y-auto">
                                 {Object.keys(selectedNode.outputs).map(x => (
                                     <div key={x} className="flex items-center justify-between p-2 border-b border-gray-200">
                                         <div>
