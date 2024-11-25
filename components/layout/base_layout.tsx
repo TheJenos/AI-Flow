@@ -3,7 +3,7 @@ import { ResizableHandle } from "../ui/resizable";
 import { ResizablePanel, ResizablePanelGroup } from "../ui/resizable";
 import Topbar from "./topbar";
 import Properties from "../node_utils/properties";
-import { useFlowStore } from "@/lib/store";
+import { useFlowStore } from "@/lib/stores/flow_store";
 import RuntimeLogs from "../node_utils/runtime_logs";
 import { TooltipProvider } from "../ui/tooltip";
 

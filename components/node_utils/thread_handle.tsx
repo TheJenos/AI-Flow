@@ -1,4 +1,4 @@
-import { useFlowStore,  AppNode, findParentMultiThreadNodeThread } from "@/lib/store";
+import { useFlowStore,  AppNode, findParentMultiThreadNodeThread } from "@/lib/stores/flow_store";
 import { Handle, Position, Edge, Connection, getIncomers, getOutgoers, useHandleConnections } from "@xyflow/react";
 
 type ThreadHandleProp = {

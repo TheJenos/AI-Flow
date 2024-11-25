@@ -1,7 +1,8 @@
 import { CircleHelp, PenBox } from 'lucide-react';
 import { Card } from '../ui/card';
 import { AppContext, getNodeDetails, NodeConnectDisconnectPayload, NodeMetaData } from '@/lib/nodes';
-import { useFlowStore, AppNode, AppNodeProp, useRuntimeStore, UpdatePayload } from '@/lib/store';
+import { useFlowStore, AppNode, AppNodeProp, UpdatePayload } from '@/lib/stores/flow_store';
+import { useRuntimeStore } from '@/lib/stores/runtime_store';
 import { cloneDeep, get, set } from 'lodash';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';

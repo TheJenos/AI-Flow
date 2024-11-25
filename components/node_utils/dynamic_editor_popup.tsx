@@ -1,6 +1,6 @@
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { useEffect, useMemo, useState } from "react";
-import { AppNode } from "@/lib/store";
+import { AppNode } from "@/lib/stores/flow_store";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 import { Label } from "../ui/label";

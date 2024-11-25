@@ -5,7 +5,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { DialogTitle } from "@radix-ui/react-dialog"
 import { Button } from "./button"
 import RichTextEditor from "./rich_text_editor"
-import { AppNode } from "@/lib/store"
+import { AppNode } from "@/lib/stores/flow_store"
 import { HighlightWithinTextarea } from 'react-highlight-within-textarea'
 import { headlights } from "@/lib/logics"
 import DynamicEditorPopup from "../node_utils/dynamic_editor_popup"

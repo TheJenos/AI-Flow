@@ -1,4 +1,4 @@
-import { useSettingStore } from "@/lib/store";
+import { useSettingStore } from "@/lib/stores/settings_store";
 import { ArrowUpDown, DollarSign, MoveUp, MoveDown, Timer } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";

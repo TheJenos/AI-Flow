@@ -1,5 +1,6 @@
 import { getNodeDetails } from "@/lib/nodes";
-import { useFlowStore, useSettingStore } from "@/lib/store"
+import { useFlowStore } from "@/lib/stores/flow_store"
+import { useSettingStore } from "@/lib/stores/settings_store";
 import { useMemo } from "react";
 import { Card, CardTitle } from "../ui/card";
 

@@ -4,13 +4,21 @@ import * as MultiTreadNode from "@/components/nodes/multi_thread";
 import * as TreadMergeNode from "@/components/nodes/thread_merge";
 import * as DecisionNode from "@/components/nodes/decision";
 import * as ConsoleLogNode from "@/components/nodes/console_log";
+import * as LocalRAGNode from "@/components/nodes/local_rag";
 import * as SetStateNode from "@/components/nodes/set_state";
 
-import { AppNode, NodeLogs, UpdatePayload } from "./store";
+import { AppNode, NodeLogs, UpdatePayload } from "./stores/flow_store";
 import Decimal from "decimal.js-light";
 import { Edge } from "@xyflow/react";
 
-export type NodeType = "start" | "prompt" | "multi_thread" | "thread_merge" | "decision" | "console_log" | "set_state"
+export type NodeType = "start" | 
+"prompt" | 
+"multi_thread" | 
+"thread_merge" | 
+"decision" | 
+"console_log" | 
+"local_rag" | 
+"set_state"
 
 const nodes = [
     StartNode,
@@ -19,6 +27,7 @@ const nodes = [
     TreadMergeNode,
     DecisionNode,
     ConsoleLogNode,
+    LocalRAGNode,
     SetStateNode
 ];
 

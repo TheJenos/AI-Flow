@@ -1,6 +1,7 @@
 import { Cog } from 'lucide-react';
 import { AppContext, Controller, NodeMetaData, NodeOutput } from '@/lib/nodes';
-import { useFlowStore, AppNode, AppNodeProp, NodeData, useRuntimeStore } from '@/lib/store';
+import { useFlowStore, AppNode, AppNodeProp, NodeData } from '@/lib/stores/flow_store';
+import { useRuntimeStore } from '@/lib/stores/runtime_store';
 import { cloneDeep, set } from 'lodash';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';

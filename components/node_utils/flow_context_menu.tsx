@@ -1,5 +1,5 @@
 import { useToast } from "@/hooks/use-toast";
-import { AppNode, useFlowStore, useTemporalFlowStore } from "@/lib/store";
+import { AppNode, useFlowStore, useTemporalFlowStore } from "@/lib/stores/flow_store";
 import { Edge, useReactFlow } from "@xyflow/react";
 import { PropsWithChildren, useCallback, useEffect } from "react";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuShortcut, ContextMenuTrigger } from "../ui/context-menu";

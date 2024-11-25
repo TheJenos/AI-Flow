@@ -1,4 +1,4 @@
-import { useTemporalFlowStore } from "@/lib/store";
+import { useTemporalFlowStore } from "@/lib/stores/flow_store";
 import { useEffect } from "react";
 import { Toggle } from "../ui/toggle";
 import { Redo, Undo } from "lucide-react";

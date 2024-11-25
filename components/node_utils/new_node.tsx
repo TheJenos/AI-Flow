@@ -2,7 +2,7 @@ import { Plus } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Toggle } from "../ui/toggle";
 import { useEffect, useState } from "react";
-import { useFlowStore } from "@/lib/store";
+import { useFlowStore } from "@/lib/stores/flow_store";
 import { nodeDetails } from "@/lib/nodes";
 import { useShallow } from "zustand/shallow";
 import { useReactFlow } from "@xyflow/react";

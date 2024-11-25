@@ -1,4 +1,5 @@
-import { AppNode, useFlowStore, useRuntimeStore } from "@/lib/store"
+import { AppNode, useFlowStore } from "@/lib/stores/flow_store"
+import { useRuntimeStore } from "@/lib/stores/runtime_store";
 import { Card, CardContent, CardDescription, CardHeader } from "../ui/card"
 import { useMemo } from "react";
 import { getNodeDetails, NodeLogView } from "@/lib/nodes";

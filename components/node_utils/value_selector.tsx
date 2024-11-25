@@ -1,5 +1,5 @@
 import { getNodeDetails, NodeDetails, nodeMap, NodeMetaData, NodeOutput } from "@/lib/nodes";
-import { AppNode, useFlowStore } from "@/lib/store";
+import { AppNode, useFlowStore } from "@/lib/stores/flow_store";
 import { Background, BackgroundVariant, getIncomers, MarkerType, NodeChange, NodeSelectionChange, ReactFlow, ReactFlowProvider } from "@xyflow/react";
 import { useMemo, useState } from "react";
 import { useShallow } from "zustand/shallow";

@@ -1,6 +1,7 @@
 import { PlayCircle, Plus, Trash } from 'lucide-react';
 import { useState } from 'react';
-import { useFlowStore, AppNode, AppNodeProp, useRuntimeStore } from '@/lib/store';
+import { useFlowStore, AppNode, AppNodeProp } from '@/lib/stores/flow_store';
+import { useRuntimeStore } from '@/lib/stores/runtime_store';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';

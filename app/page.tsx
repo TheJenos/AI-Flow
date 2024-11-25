@@ -1,7 +1,7 @@
 "use client";
 
 import { nodeMap } from '@/lib/nodes';
-import { useFlowStore, useTemporalFlowStore } from '@/lib/store';
+import { useFlowStore, useTemporalFlowStore } from '@/lib/stores/flow_store';
 import { Background, BackgroundVariant, MarkerType, ReactFlow } from '@xyflow/react';
 
 import { useShallow } from 'zustand/shallow';

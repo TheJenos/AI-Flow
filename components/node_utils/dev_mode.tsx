@@ -1,4 +1,5 @@
-import { NodeData, useSettingStore } from "@/lib/store";
+import { NodeData } from "@/lib/stores/flow_store";
+import { useSettingStore } from "@/lib/stores/settings_store";
 
 export default function DevMode({data }:{data:NodeData}) {
     const isDevMode = useSettingStore(state => state.devMode)

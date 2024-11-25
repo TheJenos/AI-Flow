@@ -1,5 +1,5 @@
-import { Captions } from 'lucide-react';
-import { AppContext, Controller, NodeLogViewProps, NodeMetaData, NodeOutput } from '@/lib/nodes';
+import { Cog } from 'lucide-react';
+import { AppContext, Controller, NodeLogViewProps, NodeMetaData, NodeOutput, OutputExtra } from '@/lib/nodes';
 import { useFlowStore, AppNode, AppNodeProp, NodeData } from '@/lib/stores/flow_store';
 import { useRuntimeStore } from '@/lib/stores/runtime_store';
 import { cloneDeep, set } from 'lodash';
@@ -12,32 +12,32 @@ import { cn } from '@/lib/utils';
 import NoteIcon from '../node_utils/node_icon';
 import { ThreadSourceHandle, ThreadTargetHandle } from '../node_utils/thread_handle';
 import DevMode from '../node_utils/dev_mode';
-import { replaceDynamicValueWithActual } from '@/lib/logics';
 import MarkdownViewer from '../ui/markdown_viewer';
 
-type ConsoleLogData = NodeData & {
-    log: string
+type RagData = NodeData & {
+    input: string
+    source: string
 }
 
 export const Metadata: NodeMetaData = {
-    type: 'console_log',
-    name: 'Console Log',
-    description: 'Logs messages to the console for debugging purposes',
-    tags: ['debug', 'log', 'console']
+    type: 'local_rag',
+    name: 'Local RAG',
+    description: 'This node implements the Retrieval Augmented Generation (RAG) model for enhancing responses with retrieved information.',
+    tags: ['rag', 'Retrieval', 'Augmented', 'Generation']
 }
 
-export const Outputs = (node: AppNode<ConsoleLogData>) => {
+export const Outputs = (node: AppNode<RagData>, extra: OutputExtra) => {
     return {
         name: {
             title: 'Node name',
             description: 'Name used in the node',
             value: node.data.name
         },
-        log: {
-            title: 'Log statement',
-            description: 'statement used in the node',
-            value: node.data.log
-        },
+        context: {
+            title: 'Context Response',
+            description: 'The retrieved context used to augment the generation process.',
+            value: extra.context
+        }
     } as NodeOutput
 }
 
@@ -47,22 +47,13 @@ export function LogView({ payload }: NodeLogViewProps<string>) {
     </>;
 }
 
-export const Process = async (context: AppContext, node: AppNode<ConsoleLogData>, nextNodes: AppNode[], controller: Controller) => {
-    const output = replaceDynamicValueWithActual(node.data.log, context)
-    if (output) {
-        console.log(`Log:${node.id} `, output);
-        controller.log({
-            id: node.id,
-            type: 'success',
-            title: "Log has send to the browser console as well",
-            nodeType: node.type,
-            payload: output
-        });
-    }
+export const Process = async (context: AppContext, node: AppNode<RagData>, nextNodes: AppNode[], controller: Controller) => {
+    console.log(controller);
+   
     return nextNodes
 }
 
-export const Properties = ({ node }: { node: AppNode<ConsoleLogData> }) => {
+export const Properties = ({ node }: { node: AppNode<RagData> }) => {
     const updateNode = useFlowStore(state => state.updateNode);
 
     const setValue = (key: string, value: string) => {
@@ -83,14 +74,23 @@ export const Properties = ({ node }: { node: AppNode<ConsoleLogData> }) => {
                 />
             </div>
             <div className='flex flex-col gap-1'>
-                <Label className='text-sm font-semibold' htmlFor="log">Log</Label>
+                <Label>Source</Label>
+                <Input
+                    name="source"
+                    value={node.data.source}
+                    placeholder="Source"
+                    onChange={(e) => setValue('source', e.target.value)}
+                />
+            </div>
+            <div className='flex flex-col gap-1'>
+                <Label className='text-sm font-semibold' htmlFor="log">User Input</Label>
                 <Textarea
-                    id="log"
-                    name="log"
-                    value={node.data.log}
+                    id="input"
+                    name="input"
+                    value={node.data.input}
                     className='h-20'
                     placeholder='Enter your statement here...'
-                    onChange={(e) => setValue('log', e.target.value)}
+                    onChange={(e) => setValue('input', e.target.value)}
                     node={node}
                     withoutRichText
                 />
@@ -128,7 +128,7 @@ export function Node({ id, selectable, isConnectable, data }: AppNodeProp) {
         <div className={cn(noteStateVariants({ state }))}>
             <ThreadTargetHandle active={isConnectable} />
             <div className='flex gap-2'>
-                <NoteIcon state={state} idleIcon={Captions} />
+                <NoteIcon state={state} idleIcon={Cog} />
                 <span className='text-sm font-semibold'>{name}</span>
             </div>
             <DevMode data={data} />

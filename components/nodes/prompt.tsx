@@ -1,6 +1,8 @@
 import { Plus, ScrollText, Trash } from 'lucide-react';
 import { AppContext, NodeMetaData, NodeOutput, OutputExtra, Controller, NodeLogViewProps } from '@/lib/nodes';
-import { useFlowStore, AppNode, AppNodeProp, NodeData, useSettingStore, useRuntimeStore } from '@/lib/store';
+import { useFlowStore, AppNode, AppNodeProp, NodeData, } from '@/lib/stores/flow_store';
+import { useSettingStore } from '@/lib/stores/settings_store';
+import { useRuntimeStore } from '@/lib/stores/runtime_store';
 import { capitalize, cloneDeep, set } from 'lodash';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';

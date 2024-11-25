@@ -1,7 +1,8 @@
 import { getIncomers } from '@xyflow/react';
 import { Merge } from 'lucide-react';
 import { AppContext, NodeMetaData } from '@/lib/nodes';
-import { useFlowStore, AppNode, AppNodeProp, useRuntimeStore } from '@/lib/store';
+import { useFlowStore, AppNode, AppNodeProp } from '@/lib/stores/flow_store';
+import { useRuntimeStore } from '@/lib/stores/runtime_store';
 import { cloneDeep, set } from 'lodash';
 import { Label } from '../ui/label';
 import { Input } from '../ui/input';
